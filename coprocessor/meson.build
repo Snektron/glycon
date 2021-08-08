@@ -1,5 +1,6 @@
 sources = [
     'src/main.c',
+    'src/serial.c',
 ]
 
 coproc_elf = executable(
