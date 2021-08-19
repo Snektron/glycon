@@ -28,9 +28,9 @@
      showgrid="false"
      inkscape:snap-grids="true"
      inkscape:snap-to-guides="true"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="340.82547"
-     inkscape:cy="287.08535"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="506.28846"
+     inkscape:cy="367.69553"
      inkscape:window-width="1920"
      inkscape:window-height="1023"
      inkscape:window-x="0"
@@ -1841,19 +1841,19 @@
     <text
        xml:space="preserve"
        style="font-size:4.93889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#aa8800;stroke-width:0.333917"
-       x="89.382851"
-       y="139.11789"
+       x="88.813622"
+       y="109.5032"
        id="text9479-1-5"
        transform="scale(0.99428228,1.0057506)"><tspan
          sodipodi:role="line"
          style="font-size:4.93889px;fill:#aa8800;stroke-width:0.333917"
-         x="89.382851"
-         y="139.11789"
+         x="88.813622"
+         y="109.5032"
          id="tspan10431-89-9">Flash WE</tspan><tspan
          sodipodi:role="line"
          style="font-size:4.93889px;fill:#aa8800;stroke-width:0.333917"
-         x="89.382851"
-         y="145.2915"
+         x="88.813622"
+         y="115.67681"
          id="tspan11805-6-3" /></text>
     <text
        xml:space="preserve"
@@ -2139,7 +2139,7 @@
        style="font-size:21.3333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect317497)"><tspan
          x="123.11133"
          y="107.51169"
-         id="tspan31117">Arduino Mega
+         id="tspan1535">Arduino Mega
 </tspan></text>
     <text
        xml:space="preserve"
@@ -2148,7 +2148,7 @@
        style="font-size:21.3333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect325707)"><tspan
          x="704.87695"
          y="111.2988"
-         id="tspan31119">Z80 board
+         id="tspan1537">Z80 board
 </tspan></text>
   </g>
 </svg>
