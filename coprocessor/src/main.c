@@ -5,18 +5,20 @@
 #include <util/delay.h>
 
 int main() {
-    LED_DDR |= LED_MASK;
-    LED_PORT |= LED_MASK;
+    PINOUT_LED_DDR |= PINOUT_LED_MASK;
 
     serial_init();
     sei();
 
+    pinout_set_data_ddr(0);
+
+    int a = 0;
     while (1) {
-        int c = serial_read_byte();
-        if (c > 0) {
-            LED_PORT ^= LED_MASK;
-            serial_write_byte(c);
-        }
+        pinout_write_data(-a);
+        a ^= 1;
+        PINOUT_LED_PORT &= ~PINOUT_LED_MASK;
+        PINOUT_LED_PORT |= -a & PINOUT_LED_MASK;
+        _delay_ms(5000);
     }
 
     return 0;

@@ -1,6 +1,7 @@
 sources = [
     'src/main.c',
     'src/serial.c',
+    'src/pinout.c',
 ]
 
 coproc_elf = executable(
