@@ -1,5 +1,5 @@
 project(
-    'coprocessor',
+    'glyco',
     'c',
     default_options: [
         'c_std=gnu11',
@@ -9,7 +9,7 @@ project(
 )
 
 if not meson.is_cross_build()
-    error('Glycon coprocessor should be cross-compiled: meson glycon/coprocessor build --cross-file glycon/coprocessor/avr-atmega2560-cross.ini')
+    error('Glycon coprocessor should be cross-compiled: meson glycon/glyco build --cross-file glycon/cross/avr-atmega2560-cross.ini')
 endif
 
 sources = [
@@ -18,15 +18,15 @@ sources = [
     'src/pinout.c',
 ]
 
-coproc_elf = executable(
-    'coproc.elf',
+glyco_elf = executable(
+    'glyco.elf',
     sources,
 )
 
-coproc_ihx = custom_target(
-    'coproc',
-    input: coproc_elf,
-    output: 'coproc.ihx',
+glyco_ihx = custom_target(
+    'glyco',
+    input: glyco_elf,
+    output: 'glyco.ihx',
     build_by_default: true,
     command: [
         find_program('objcopy'),
@@ -45,8 +45,8 @@ run_target(
         '-c', meson.get_cross_property('programmer'),
         '-b', meson.get_cross_property('baud_rate'),
         '-D',
-        '-U', 'flash:w:@0@:i'.format(coproc_ihx.full_path()),
+        '-U', 'flash:w:@0@:i'.format(glyco_ihx.full_path()),
         '-P', get_option('port')
     ],
-    depends: coproc_ihx
+    depends: glyco_ihx
 )

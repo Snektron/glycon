@@ -13,8 +13,8 @@
 ### Coprocessor
 
 ```
-$ mkdir -p build/coprocessor
-$ cd build/coprocessor
+$ mkdir -p build/glyco
+$ cd build/glyco
 $ meson ../.. --cross-file ../../cross/avr-atmega2560-cross.ini
 $ ninja
 ```
