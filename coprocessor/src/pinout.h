@@ -23,13 +23,18 @@
 #define PINOUT_ADDR_LO_DDR DDRC
 #define PINOUT_ADDR_LO_PORT PORTC
 
+enum pin_direction {
+    PIN_INPUT = 0,
+    PIN_OUTPUT = 1
+};
+
 // Set the direction of the data pins.
-// 1 means input, 0 is output.
-void pinout_set_data_ddr(int direction);
+// 0 means input, 1 is output.
+void pinout_set_data_ddr(enum pin_direction direction);
 
 // Set the direction of the address pins.
-// 1 means input, 0 is output.
-void pinout_set_addr_ddr(int direction);
+// 0 means input, 1 is output.
+void pinout_set_addr_ddr(enum pin_direction direction);
 
 // Write a value to the data bus.
 // Requires that the data bus DDR is set to output.

@@ -10,15 +10,15 @@ int main() {
     serial_init();
     sei();
 
-    pinout_set_data_ddr(0);
+    pinout_set_data_ddr(PIN_OUTPUT);
 
     int a = 0;
     while (1) {
-        pinout_write_data(-a);
         a ^= 1;
+        pinout_write_data(-a);
         PINOUT_LED_PORT &= ~PINOUT_LED_MASK;
         PINOUT_LED_PORT |= -a & PINOUT_LED_MASK;
-        _delay_ms(5000);
+        _delay_ms(100);
     }
 
     return 0;

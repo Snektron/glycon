@@ -1,12 +1,12 @@
 #include "pinout.h"
 
-void pinout_set_data_ddr(int direction) {
-    PINOUT_DATA_DDR = -direction;
+void pinout_set_data_ddr(enum pin_direction direction) {
+    PINOUT_DATA_DDR = -(int) direction;
 }
 
-void pinout_set_addr_ddr(int direction) {
-    PINOUT_ADDR_HI_DDR = -direction;
-    PINOUT_ADDR_LO_DDR = -direction;
+void pinout_set_addr_ddr(enum pin_direction direction) {
+    PINOUT_ADDR_HI_DDR = -(int) direction;
+    PINOUT_ADDR_LO_DDR = -(int) direction;
 }
 
 void pinout_write_data(uint8_t data) {
