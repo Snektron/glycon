@@ -1,3 +1,17 @@
+project(
+    'coprocessor',
+    'c',
+    default_options: [
+        'c_std=gnu11',
+        'b_lto=true',
+        'buildtype=minsize',
+    ]
+)
+
+if not meson.is_cross_build()
+    error('Glycon coprocessor should be cross-compiled: meson glycon/coprocessor build --cross-file glycon/coprocessor/avr-atmega2560-cross.ini')
+endif
+
 sources = [
     'src/main.c',
     'src/serial.c',

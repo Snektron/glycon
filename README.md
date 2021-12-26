@@ -10,10 +10,12 @@
 
 ## Compiling
 
+### Coprocessor
+
 ```
-$ mkdir build
-$ cd build
-$ meson .. --cross-file ../coprocessor/avr-atmega2560-cross.ini
+$ mkdir -p build/coprocessor
+$ cd build/coprocessor
+$ meson ../.. --cross-file ../../cross/avr-atmega2560-cross.ini
 $ ninja
 ```
 

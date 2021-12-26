@@ -1,0 +1,1 @@
+option('port', type: 'string', value: '/dev/ttyUSB0', description: 'Coprocessor arduino port')
