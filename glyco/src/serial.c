@@ -2,6 +2,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <util/setbaud.h>
 
 // The amount of bytes that can be received at once.
@@ -52,6 +53,23 @@ uint16_t serial_avail() {
 }
 
 void serial_wait_for_data() {
+    if (!ring_buffer_is_empty(&rx_buffer))
+        return;
+
+    // Note: any other sleep mode is not woken up by the USARTs
+    set_sleep_mode(SLEEP_MODE_IDLE);
+    cli();
+    while (ring_buffer_is_empty(&rx_buffer)) {
+        sleep_enable();
+        sei();
+        sleep_cpu();
+        sleep_disable();
+        cli();
+    }
+    sei();
+}
+
+void serial_poll_for_data() {
     while (ring_buffer_is_empty(&rx_buffer))
         continue;
 }
