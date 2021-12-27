@@ -6,22 +6,24 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// See doc/z80comp_pinout.svg and doc/Arduino-Mega-Pinout.jpg
+
 #define PINOUT_LED_DDR DDRB
 #define PINOUT_LED_PORT PORTB
 #define PINOUT_LED_MASK (1 << PB7)
 
-// Data pin definitions
-
 #define PINOUT_DATA_DDR DDRL
 #define PINOUT_DATA_PORT PORTL
-
-// Address pin definitions
 
 #define PINOUT_ADDR_HI_DDR DDRA
 #define PINOUT_ADDR_HI_PORT PORTA
 
 #define PINOUT_ADDR_LO_DDR DDRC
 #define PINOUT_ADDR_LO_PORT PORTC
+
+#define PINOUT_FLASH_WE_DDR DDRG
+#define PINOUT_FLASH_WE_PORT PORTG
+#define PINOUT_FLASH_WE_MASK (1 << PG0)
 
 enum pin_direction {
     PIN_INPUT = 0,

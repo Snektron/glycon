@@ -1,15 +1,17 @@
 project(
     'glydb',
-    'cpp',
+    'c',
     default_options: [
-        'cpp_std=c++20',
+        'c_std=gnu11',
         'b_lto=true',
-        'buildtype=minsize',
+        'buildtype=debugoptimized',
     ]
 )
 
 sources = [
-    'src/main.cpp',
+    'src/main.c',
+    'src/connection.c',
+    'src/interpreter.c',
 ]
 
 executable(

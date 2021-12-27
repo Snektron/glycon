@@ -16,7 +16,7 @@ int main(void) {
 
     while (1) {
         serial_wait_for_data();
-        serial_read_byte();
+        pinout_write_data(serial_read_byte());
         PINOUT_LED_PORT ^= PINOUT_LED_MASK;
     }
 
