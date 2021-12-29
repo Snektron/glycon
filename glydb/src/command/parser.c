@@ -30,9 +30,9 @@ bool parser_skip_ws(struct parser* p) {
     return true;
 }
 
-size_t parser_eat_verb(struct parser* p) {
+size_t parser_eat_word(struct parser* p) {
     int c = parser_peek(p);
-    if (!isalpha(c))
+    if (!isalnum(c) && c != '-')
         return 0;
 
     ++p->offset;

@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#define CMD_VARIADIC (-1)
+
 struct interpreter;
 
 typedef void (*cmd_handler_t)(struct interpreter* interp);
@@ -12,7 +14,7 @@ struct cmd_option {
     const char* name;
     char shorthand;
     const char* help;
-    bool takes_argument;
+    const char* value_name; // If NULL takes no value
 };
 
 enum cmd_type {
@@ -27,7 +29,7 @@ struct cmd_directory {
 
 struct cmd_leaf {
     const struct cmd_option* options;
-    bool has_freeform_args;
+    int positionals; // Allows CMD_VARIADIC
     cmd_handler_t handler;
 };
 

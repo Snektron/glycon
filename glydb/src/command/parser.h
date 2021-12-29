@@ -40,13 +40,17 @@ inline const char* parser_remaining(struct parser* p) {
     return &p->input[p->offset];
 }
 
+inline size_t parser_remaining_len(struct parser* p) {
+    return p->length - p->offset;
+}
+
 void parser_init(struct parser* p, size_t len, const char input[len]);
 
 bool parser_test_ws(struct parser* p);
 
 bool parser_skip_ws(struct parser* p);
 
-// Match a [a-zA-Z][a-zA-Z0-9-]
-size_t parser_eat_verb(struct parser* p);
+// Match a [a-zA-Z0-9-]+
+size_t parser_eat_word(struct parser* p);
 
 #endif
