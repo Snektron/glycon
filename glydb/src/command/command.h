@@ -10,8 +10,6 @@
 
 struct interpreter;
 
-typedef void (*cmd_handler_t)(struct interpreter* interp);
-
 struct cmd_option {
     const char* name;
     char shorthand;
@@ -32,7 +30,7 @@ struct cmd_directory {
 struct cmd_leaf {
     const struct cmd_option* options;
     int positionals; // Allows CMD_VARIADIC
-    cmd_handler_t handler;
+    void* payload;
 };
 
 struct cmd {
@@ -47,8 +45,8 @@ struct cmd {
 };
 
 struct cmd_parser {
-    const struct cmd* spec;
     struct parser p;
+    const struct cmd* spec;
 
     // The most recently matched command.
     // May be empty if the input was empty, which is technically a valid command.
@@ -58,9 +56,17 @@ struct cmd_parser {
     // This includes invalid commands, in which case this offset will not actually
     // correspond with that of `matched_command`.
     size_t command_offset;
+
+    // One for each of the matched command's options array.
+    // For a flag without value, the option is set to "" if its present.
+    char** options;
+    char** positionals;
+    size_t positionals_len;
 };
 
 void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len, const char line[len]);
+
+void cmd_parser_deinit(struct cmd_parser* cmdp);
 
 bool cmd_parse(struct cmd_parser* cmdp);
 

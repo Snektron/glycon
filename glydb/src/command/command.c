@@ -71,16 +71,39 @@ static void report_missing_argument(struct cmd_parser* cmdp, const struct cmd_op
     }
 }
 
-static void report_invalid_long_option(struct cmd_parser* cmdp, size_t len, const char option[len]) {
+static void report_invalid_long_option(struct cmd_parser* cmdp, size_t len, const char opt[len]) {
     printf("error: ");
     print_command(cmdp);
-    printf(": invalid option --%.*s\n", (int) len, option);
+    printf(": invalid option --%.*s\n", (int) len, opt);
 }
 
-static void report_invalid_short_option(struct cmd_parser* cmdp, char option) {
+static void report_invalid_short_option(struct cmd_parser* cmdp, char opt) {
     printf("error: ");
     print_command(cmdp);
-    printf(": invalid option -%c\n", option);
+    printf(": invalid option -%c\n", opt);
+}
+
+static void report_duplicate_option(struct cmd_parser* cmdp, const struct cmd_option* opt) {
+    printf("error: ");
+    print_command(cmdp);
+    if (opt->shorthand && opt->name) {
+        printf(": duplicate option -%c/--%s\n", opt->shorthand, opt->name);
+    } else if (opt->shorthand) {
+        printf(": duplicate option -%c\n", opt->shorthand);
+    } else {
+        printf(": duplicate option --%s\n", opt->name);
+    }
+}
+
+static void report_incorrect_positionals(struct cmd_parser* cmdp) {
+    printf("error: ");
+    print_command(cmdp);
+
+    if (cmdp->positionals_len > cmdp->matched_command->leaf.positionals) {
+        printf(": too many positional arguments\n");
+    } else {
+        printf(": not enough positional arguments\n");
+    }
 }
 
 static bool is_flag(const char text[]) {
@@ -98,16 +121,18 @@ static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* 
         return false;
     }
 
-    const struct cmd_option* opt = options;
-    while (options && (opt->name || opt->shorthand)) {
-        if (strncmp(opt->name, option, option_len) != 0) {
-            ++opt;
+    for (size_t i = 0; options && (options[i].name || options[i].shorthand); ++i) {
+        const struct cmd_option* opt = &options[i];
+        if (strncmp(opt->name, option, option_len) != 0)
             continue;
+
+        if (cmdp->options[i]) {
+            report_duplicate_option(cmdp, opt);
+            return false;
         }
 
         if (!opt->value_name) {
-            // TODO: Add to parsed options list.
-            printf("Matched option --%s\n", opt->name);
+            cmdp->options[i] = strdup("");
             return true;
         }
 
@@ -117,6 +142,7 @@ static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* 
             return true;
         }
 
+        // TODO: Integrate with expression parsing.
         const char* option_arg = parser_remaining(p);
         size_t option_arg_len = parser_eat_word(p);
 
@@ -125,7 +151,7 @@ static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* 
             return false;
         }
 
-        printf("Matched option --%s with argument %.*s\n", opt->name, (int) option_arg_len, option_arg);
+        cmdp->options[i] = strndup(option_arg, option_arg_len);
         return true;
     }
 
@@ -147,16 +173,20 @@ static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option
             return true;
 
         int option = parser_peek(p);
-        const struct cmd_option* opt = options;
-        while (options && (opt->name || opt->shorthand)) {
-            if (opt->shorthand != option) {
-                ++opt;
+        for (size_t i = 0; options && (options[i].name || options[i].shorthand); ++i) {
+            const struct cmd_option* opt = &options[i];
+            if (opt->shorthand != option)
                 continue;
-            }
+
             ++p->offset;
 
+            if (cmdp->options[i]) {
+                report_duplicate_option(cmdp, opt);
+                return false;
+            }
+
             if (!opt->value_name) {
-                printf("Matched option '-%c'\n", option);
+                cmdp->options[i] = strdup("");
                 goto next_option;
             }
 
@@ -166,6 +196,7 @@ static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option
                 return false;
             }
 
+            // TODO: Integrate with expression parsing.
             const char* option_arg = parser_remaining(p);
             size_t option_arg_len = parser_eat_word(p);
 
@@ -174,7 +205,7 @@ static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option
                 return false;
             }
 
-            printf("Matched option -%c with argument %.*s\n", option, (int) option_arg_len, option_arg);
+            cmdp->options[i] = strndup(option_arg, option_arg_len);
             return true;
         }
 
@@ -183,7 +214,19 @@ static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option
     }
 }
 
-static bool parse_leaf(struct cmd_parser* cmdp, const struct cmd* cmd) {
+static bool parse_leaf(struct cmd_parser* cmdp) {
+    const struct cmd* cmd = cmdp->matched_command;
+    size_t num_optionals = 0;
+    {
+        const struct cmd_option* opt = cmd->leaf.options;
+        while (opt && (opt->name || opt->shorthand)) {
+            ++num_optionals;
+            ++opt;
+        }
+    }
+
+    cmdp->options = calloc(num_optionals, sizeof(const char*));
+
     struct parser* p = &cmdp->p;
     while (true) {
         parser_skip_ws(p);
@@ -192,8 +235,6 @@ static bool parse_leaf(struct cmd_parser* cmdp, const struct cmd* cmd) {
         } else if (parser_peek(p) != '-') {
             // Parse a positional argument.
             // TODO: Integrate with expression parsing.
-            // TODO: Apprent to some positional arguments lists.
-            // For that we probably also want to keep some buffer with a longer lifetime.
             const char* positional = parser_remaining(p);
             size_t positional_len = parser_eat_word(p);
             if (positional_len == 0) {
@@ -201,7 +242,10 @@ static bool parse_leaf(struct cmd_parser* cmdp, const struct cmd* cmd) {
                 return false;
             }
 
-            printf("Matched positional argument '%.*s'\n", (int) positional_len, positional);
+            // TODO: More efficient realloc
+            size_t i = cmdp->positionals_len++;
+            cmdp->positionals = realloc(cmdp->positionals, cmdp->positionals_len);
+            cmdp->positionals[i] = strndup(positional, positional_len);
             continue;
         }
 
@@ -218,7 +262,11 @@ static bool parse_leaf(struct cmd_parser* cmdp, const struct cmd* cmd) {
         }
     }
 
-    printf("Matched command '%s'\n", cmd->name);
+    if (cmd->leaf.positionals != CMD_VARIADIC && cmd->leaf.positionals != cmdp->positionals_len) {
+        report_incorrect_positionals(cmdp);
+        return false;
+    }
+
     return true;
 }
 
@@ -260,7 +308,7 @@ static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* spec) {
             case CMD_TYPE_DIRECTORY:
                 return parse_cmd(cmdp, cmd->directory.subcommands);
             case CMD_TYPE_LEAF:
-                return parse_leaf(cmdp, cmd);
+                return parse_leaf(cmdp);
         }
     }
 
@@ -270,10 +318,29 @@ static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* spec) {
 }
 
 void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len, const char line[len]) {
+    parser_init(&cmdp->p, len, line);
     cmdp->spec = spec;
     cmdp->matched_command = NULL;
     cmdp->command_offset = 0;
-    parser_init(&cmdp->p, len, line);
+    cmdp->options = NULL;
+    cmdp->positionals = NULL;
+    cmdp->positionals_len = 0;
+}
+
+void cmd_parser_deinit(struct cmd_parser* cmdp) {
+    if (cmdp->matched_command && cmdp->matched_command->type == CMD_TYPE_LEAF) {
+        const struct cmd_option* options = cmdp->matched_command->leaf.options;
+        for (size_t i = 0; options && (options[i].name || options[i].shorthand); ++i) {
+            free(cmdp->options[i]);
+        }
+    }
+
+    for (size_t i = 0; i < cmdp->positionals_len; ++i) {
+        free(cmdp->positionals[i]);
+    }
+
+    free(cmdp->options);
+    free(cmdp->positionals);
 }
 
 bool cmd_parse(struct cmd_parser* cmdp) {

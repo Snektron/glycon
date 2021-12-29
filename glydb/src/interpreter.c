@@ -18,7 +18,7 @@ struct cmd_option memory_write_opts[] = {
 
 struct cmd memory_commands[] = {
     {CMD_TYPE_LEAF, "write", "help for 'memory write'", {.leaf = {memory_write_opts, 0, NULL}}},
-    {CMD_TYPE_LEAF, "read", "help for 'memory read'", {.leaf = {NULL, 0, NULL}}},
+    {CMD_TYPE_LEAF, "read", "help for 'memory read'", {.leaf = {NULL, 1, NULL}}},
     {}
 };
 
@@ -36,6 +36,7 @@ void interpreter_do_line(struct interpreter* interp, size_t len, const char line
     struct cmd_parser cmdp;
     cmd_parser_init(&cmdp, commands, len, line);
     cmd_parse(&cmdp);
+    cmd_parser_deinit(&cmdp);
 }
 
 void interpreter_repl(struct interpreter* interp) {
