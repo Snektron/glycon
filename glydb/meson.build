@@ -16,8 +16,13 @@ sources = [
     'src/command/parser.c',
 ]
 
+deps = [
+    dependency('libeditline'),
+]
+
 executable(
     'glydb',
     sources,
+    dependencies: deps,
     include_directories: include_directories('src')
 )
