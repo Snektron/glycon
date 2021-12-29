@@ -12,9 +12,12 @@ sources = [
     'src/main.c',
     'src/connection.c',
     'src/interpreter.c',
+    'src/command/command.c',
+    'src/command/parser.c',
 ]
 
 executable(
     'glydb',
-    sources
+    sources,
+    include_directories: include_directories('src')
 )

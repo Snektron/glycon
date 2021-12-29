@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "command/command.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -6,20 +7,33 @@
 
 static const char* prompt = "(glydb) ";
 
+struct cmd memory_commands[] = {
+    {CMD_TYPE_LEAF, "write", "help for 'memory write'"},
+    {CMD_TYPE_LEAF, "read", "help for 'memory read'"},
+    {}
+};
+
+struct cmd commands[] = {
+    {CMD_TYPE_DIRECTORY, "memory", "help for 'memory'", {{memory_commands}}},
+    {}
+};
+
 void interpreter_init(struct interpreter* interp) {
-    (void) interp;
+    interp->quit = false;
 }
 
 void interpreter_do_line(struct interpreter* interp, size_t len, const char line[len]) {
     (void) interp;
-    printf("got line %s (%lu bytes)\n", line, len);
+    cmd_parse(commands, len, line);
 }
 
 void interpreter_repl(struct interpreter* interp) {
+    interp->quit = false;
+
     char* line = NULL;
     size_t buflen = 0;
 
-    while (1) {
+    while (!interp->quit) {
         printf("%s", prompt);
         ssize_t len = getline(&line, &buflen, stdin);
         if (len >= 0) {
