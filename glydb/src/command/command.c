@@ -1,23 +1,101 @@
 #include "command/command.h"
-#include "command/parser.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
+
+static void print_command(struct cmd_parser* cmdp) {
+    struct parser p = cmdp->p;
+    p.offset = 0;
+    bool first = true;
+
+    const struct cmd* cmd = cmdp->spec;
+    while (p.offset <= cmdp->command_offset) {
+        parser_skip_ws(&p);
+        const char* command = parser_remaining(&p);
+        size_t command_len = parser_eat_word(&p);
+        assert(command_len != 0);
+
+        if (first) {
+            first = false;
+        } else {
+            printf(" ");
+        }
+
+        while (cmd->type != CMD_TYPE_END && strncmp(command, cmd->name, command_len) != 0) {
+            ++cmd;
+            continue;
+        }
+
+        if (cmd->type == CMD_TYPE_END) {
+            // No match: just print the word
+            printf("%.*s", (int) command_len, command);
+        } else {
+            // Print the full name for clarity.
+            printf("%s", cmd->name);
+        }
+
+        if (cmd->type == CMD_TYPE_DIRECTORY)
+            cmd = cmd->directory.subcommands;
+    }
+}
+
+static void report_invalid_command(struct cmd_parser* cmdp) {
+    printf("error: invalid command '");
+    print_command(cmdp);
+    puts("'");
+}
+
+static void report_unexpected_character(struct cmd_parser* cmdp) {
+    int c = parser_peek(&cmdp->p);
+    if (c < 0) {
+        printf("error: unexpected end of command\n");
+    } else if (isprint(c)) {
+        printf("error: unexpected character %c\n", c);
+    } else {
+        printf("error: unexpected character \\x%02X\n", c);
+    }
+}
+
+static void report_missing_argument(struct cmd_parser* cmdp, const struct cmd_option* opt, bool shorthand) {
+    printf("error: ");
+    print_command(cmdp);
+    printf(": missing argument <%s> to option ", opt->value_name);
+
+    if (shorthand) {
+        printf("-%c\n", opt->shorthand);
+    } else {
+        printf("--%s\n", opt->name);
+    }
+}
+
+static void report_invalid_long_option(struct cmd_parser* cmdp, size_t len, const char option[len]) {
+    printf("error: ");
+    print_command(cmdp);
+    printf(": invalid option --%.*s\n", (int) len, option);
+}
+
+static void report_invalid_short_option(struct cmd_parser* cmdp, char option) {
+    printf("error: ");
+    print_command(cmdp);
+    printf(": invalid option -%c\n", option);
+}
 
 static bool is_flag(const char text[]) {
     return text[0] == '-';
 }
 
-static void parse_long_option(const struct cmd_option* options, struct parser* p) {
+static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* options) {
+    struct parser* p = &cmdp->p;
     // At this point, the leading -- is already parsed.
     const char* option = parser_remaining(p);
     size_t option_len = parser_eat_word(p);
     if (option_len == 0) {
-        // TODO: Proper error handling.
         // Note: Also matches '--'.
-        printf("Unexpected characters in command %.*s\n", (int) p->length, p->input);
-        return;
+        report_unexpected_character(cmdp);
+        return false;
     }
 
     const struct cmd_option* opt = options;
@@ -30,33 +108,33 @@ static void parse_long_option(const struct cmd_option* options, struct parser* p
         if (!opt->value_name) {
             // TODO: Add to parsed options list.
             printf("Matched option --%s\n", opt->name);
-            return;
+            return true;
         }
 
         parser_skip_ws(p);
         if (parser_is_at_end(p)) {
-            // TODO: Proper error handling
-            printf("Missing argument <%s> for option --%s\n", opt->value_name, opt->name);
-            return;
+            report_missing_argument(cmdp, opt, false);
+            return true;
         }
 
         const char* option_arg = parser_remaining(p);
         size_t option_arg_len = parser_eat_word(p);
 
         if (option_arg_len == 0) {
-            // TODO: Proper error handling
-            printf("Unexpected characters in command %.*s\n", (int) p->length, p->input);
-            return;
+            report_unexpected_character(cmdp);
+            return false;
         }
 
         printf("Matched option --%s with argument %.*s\n", opt->name, (int) option_arg_len, option_arg);
-        return;
+        return true;
     }
 
-    printf("Invalid option --%.*s\n", (int) option_len, option);
+    report_invalid_long_option(cmdp, option_len, option);
+    return false;
 }
 
-static void parse_short_options(const struct cmd_option* options, struct parser* p) {
+static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option* options) {
+    struct parser* p = &cmdp->p;
     // At this point, the leading - is already parsed.
     // Note: We might support multiple forms of short flags depending on the flag's type:
     // - -x arg: x with argument 'arg'
@@ -66,7 +144,7 @@ static void parse_short_options(const struct cmd_option* options, struct parser*
     while (true) {
     next_option:
         if (parser_is_at_end(p) || parser_test_ws(p))
-            break;
+            return true;
 
         int option = parser_peek(p);
         const struct cmd_option* opt = options;
@@ -84,29 +162,29 @@ static void parse_short_options(const struct cmd_option* options, struct parser*
 
             parser_skip_ws(p);
             if (parser_is_at_end(p)) {
-                printf("Missing argument <%s> for option -%c\n", opt->value_name, option);
-                return;
+                report_missing_argument(cmdp, opt, true);
+                return false;
             }
 
             const char* option_arg = parser_remaining(p);
             size_t option_arg_len = parser_eat_word(p);
 
             if (option_arg_len == 0) {
-                // TODO: Proper error handling
-                printf("Unexpected characters in command %.*s\n", (int) p->length, p->input);
-                return;
+                report_unexpected_character(cmdp);
+                return false;
             }
 
             printf("Matched option -%c with argument %.*s\n", option, (int) option_arg_len, option_arg);
-            return;
+            return true;
         }
 
-        printf("Invalid short option '-%c'\n", option);
-        return;
+        report_invalid_short_option(cmdp, option);
+        return false;
     }
 }
 
-static void parse_leaf(const struct cmd* cmd, struct parser* p) {
+static bool parse_leaf(struct cmd_parser* cmdp, const struct cmd* cmd) {
+    struct parser* p = &cmdp->p;
     while (true) {
         parser_skip_ws(p);
         if (parser_is_at_end(p)) {
@@ -119,9 +197,8 @@ static void parse_leaf(const struct cmd* cmd, struct parser* p) {
             const char* positional = parser_remaining(p);
             size_t positional_len = parser_eat_word(p);
             if (positional_len == 0) {
-                // TODO: Proper error handling.
-                printf("Unexpected characters in command %.*s\n", (int) p->length, p->input);
-                return;
+                report_unexpected_character(cmdp);
+                return false;
             }
 
             printf("Matched positional argument '%.*s'\n", (int) positional_len, positional);
@@ -132,34 +209,39 @@ static void parse_leaf(const struct cmd* cmd, struct parser* p) {
         if (parser_peek(p) == '-') {
             // Long argument
             ++p->offset;
-            parse_long_option(cmd->leaf.options, p);
+            if (!parse_long_option(cmdp, cmd->leaf.options))
+                return false;
         } else {
             // Short argument
-            parse_short_options(cmd->leaf.options, p);
+            if (!parse_short_options(cmdp, cmd->leaf.options))
+                return false;
         }
     }
 
     printf("Matched command '%s'\n", cmd->name);
+    return true;
 }
 
-static void parse_cmd(const struct cmd* spec, struct parser* p) {
+static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* spec) {
+    struct parser* p = &cmdp->p;
     parser_skip_ws(p);
     if (parser_is_at_end(p)) {
-        printf("Expected a (sub)command in command '%.*s'\n", (int) p->length, p->input);
-        return;
+        // Matched no command. In this case we either match the directory or
+        // the empty input. In either case, cmdp->matched_command is already
+        // correct.
+        return true;
     }
 
+    cmdp->command_offset = p->offset;
     const char* command = parser_remaining(p);
     size_t command_len = parser_eat_word(p);
 
     if (command_len == 0) {
-        // TODO: Proper error handling.
-        printf("Unexpected characters in command '%.*s'\n", (int) p->length, p->input);
-        return;
+        report_unexpected_character(cmdp);
+        return false;
     } else if (is_flag(command)) {
-        // TODO: Proper error handling.
-        printf("Unexpected option %.*s in command '%.*s'\n", (int) command_len, command, (int) p->length, p->input);
-        return;
+        report_invalid_command(cmdp);
+        return false;
     }
 
     const struct cmd* cmd = spec;
@@ -171,26 +253,30 @@ static void parse_cmd(const struct cmd* spec, struct parser* p) {
         }
 
         // Matched a (sub)command.
+        cmdp->matched_command = cmd;
         switch (cmd->type) {
             case CMD_TYPE_END:
                 assert(false);
             case CMD_TYPE_DIRECTORY:
-                parse_cmd(cmd->directory.subcommands, p);
-                return;
+                return parse_cmd(cmdp, cmd->directory.subcommands);
             case CMD_TYPE_LEAF:
-                parse_leaf(cmd, p);
-                return;
+                return parse_leaf(cmdp, cmd);
         }
     }
 
     // No commands matched.
-    // TODO: Proper error handling.
-    printf("Invalid command '%.*s'\n", (int) command_len, command);
+    report_invalid_command(cmdp);
+    return false;
 }
 
-void cmd_parse(const struct cmd* spec, size_t len, const char line[len]) {
-    struct parser p;
-    parser_init(&p, len, line);
-    parse_cmd(spec, &p);
+void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len, const char line[len]) {
+    cmdp->spec = spec;
+    cmdp->matched_command = NULL;
+    cmdp->command_offset = 0;
+    parser_init(&cmdp->p, len, line);
+}
+
+bool cmd_parse(struct cmd_parser* cmdp) {
+    return parse_cmd(cmdp, cmdp->spec);
 }
 

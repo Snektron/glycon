@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "command/parser.h"
+
 #define CMD_VARIADIC (-1)
 
 struct interpreter;
@@ -44,6 +46,22 @@ struct cmd {
     };
 };
 
-void cmd_parse(const struct cmd* spec, size_t len, const char line[len]);
+struct cmd_parser {
+    const struct cmd* spec;
+    struct parser p;
+
+    // The most recently matched command.
+    // May be empty if the input was empty, which is technically a valid command.
+    const struct cmd* matched_command;
+
+    // Start offset of the most recently matched command (for error reporting).
+    // This includes invalid commands, in which case this offset will not actually
+    // correspond with that of `matched_command`.
+    size_t command_offset;
+};
+
+void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len, const char line[len]);
+
+bool cmd_parse(struct cmd_parser* cmdp);
 
 #endif

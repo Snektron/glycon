@@ -33,7 +33,9 @@ void interpreter_init(struct interpreter* interp) {
 
 void interpreter_do_line(struct interpreter* interp, size_t len, const char line[len]) {
     (void) interp;
-    cmd_parse(commands, len, line);
+    struct cmd_parser cmdp;
+    cmd_parser_init(&cmdp, commands, len, line);
+    cmd_parse(&cmdp);
 }
 
 void interpreter_repl(struct interpreter* interp) {
