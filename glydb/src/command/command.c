@@ -95,15 +95,17 @@ static void report_duplicate_option(struct cmd_parser* cmdp, const struct cmd_op
     }
 }
 
-static void report_incorrect_positionals(struct cmd_parser* cmdp) {
+static void report_missing_positional(struct cmd_parser* cmdp) {
     printf("error: ");
     print_command(cmdp);
+    size_t i = cmdp->positionals_len;
+    printf(": missing required positional argument <%s>\n", cmdp->matched_command->leaf.positionals[i].value_name);
+}
 
-    if (cmdp->positionals_len > cmdp->matched_command->leaf.positionals) {
-        printf(": too many positional arguments\n");
-    } else {
-        printf(": not enough positional arguments\n");
-    }
+static void report_superficial_positional(struct cmd_parser* cmdp, size_t len, const char pos[len]) {
+    printf("error: ");
+    print_command(cmdp);
+    printf(": superficial positional argument '%.*s'\n", (int) len, pos);
 }
 
 static bool is_flag(const char text[]) {
@@ -224,8 +226,31 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
             ++opt;
         }
     }
+    size_t min_positionals = 0;
+    size_t max_positionals = 0;
+    bool variadic = false;
+    {
+        const struct cmd_positional* pos = cmd->leaf.positionals;
+        bool seen_optional = false;
+        while (pos && pos->value_name) {
+            assert(!variadic); // Must only occur on the last positional
+            ++max_positionals;
+            if (pos->flags & CMD_OPTIONAL) {
+                seen_optional = true;
+            } else {
+                assert(!seen_optional);
+                ++min_positionals;
+            }
+
+            if (pos->flags & CMD_VARIADIC)
+                variadic = true;
+
+            ++pos;
+        }
+    }
 
     cmdp->options = calloc(num_optionals, sizeof(const char*));
+    cmdp->positionals = calloc(min_positionals, sizeof(const char*));
 
     struct parser* p = &cmdp->p;
     while (true) {
@@ -242,9 +267,16 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
                 return false;
             }
 
-            // TODO: More efficient realloc
             size_t i = cmdp->positionals_len++;
-            cmdp->positionals = realloc(cmdp->positionals, cmdp->positionals_len);
+            if (i == max_positionals && !variadic) {
+                report_superficial_positional(cmdp, positional_len, positional);
+                return false;
+            }
+
+            if (cmdp->positionals_len >= min_positionals) {
+                // TODO: More efficient realloc
+                cmdp->positionals = realloc(cmdp->positionals, cmdp->positionals_len);
+            }
             cmdp->positionals[i] = strndup(positional, positional_len);
             continue;
         }
@@ -262,8 +294,8 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
         }
     }
 
-    if (cmd->leaf.positionals != CMD_VARIADIC && cmd->leaf.positionals != cmdp->positionals_len) {
-        report_incorrect_positionals(cmdp);
+    if (cmdp->positionals_len < min_positionals) {
+        report_missing_positional(cmdp);
         return false;
     }
 
@@ -346,4 +378,3 @@ void cmd_parser_deinit(struct cmd_parser* cmdp) {
 bool cmd_parse(struct cmd_parser* cmdp) {
     return parse_cmd(cmdp, cmdp->spec);
 }
-

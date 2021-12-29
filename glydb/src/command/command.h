@@ -6,8 +6,6 @@
 
 #include "command/parser.h"
 
-#define CMD_VARIADIC (-1)
-
 struct interpreter;
 
 struct cmd_option {
@@ -15,6 +13,17 @@ struct cmd_option {
     char shorthand;
     const char* help;
     const char* value_name; // If NULL takes no value
+};
+
+enum cmd_flag {
+    CMD_OPTIONAL = 1 << 0,
+    CMD_VARIADIC = 2 << 0
+};
+
+struct cmd_positional {
+    const char* value_name;
+    const char* help;
+    enum cmd_flag flags;
 };
 
 enum cmd_type {
@@ -29,7 +38,7 @@ struct cmd_directory {
 
 struct cmd_leaf {
     const struct cmd_option* options;
-    int positionals; // Allows CMD_VARIADIC
+    const struct cmd_positional* positionals;
     void* payload;
 };
 

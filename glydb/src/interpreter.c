@@ -16,9 +16,15 @@ struct cmd_option memory_write_opts[] = {
     {}
 };
 
+struct cmd_positional memory_write_pos[] = {
+    {"address", "the address to start writing at"},
+    {"values", "values to write", CMD_OPTIONAL | CMD_VARIADIC},
+    {}
+};
+
 struct cmd memory_commands[] = {
-    {CMD_TYPE_LEAF, "write", "help for 'memory write'", {.leaf = {memory_write_opts, 0, NULL}}},
-    {CMD_TYPE_LEAF, "read", "help for 'memory read'", {.leaf = {NULL, 1, NULL}}},
+    {CMD_TYPE_LEAF, "write", "help for 'memory write'", {.leaf = {memory_write_opts, memory_write_pos}}},
+    {CMD_TYPE_LEAF, "read", "help for 'memory read'", {.leaf = {}}},
     {}
 };
 
