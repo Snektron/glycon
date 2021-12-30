@@ -1,4 +1,4 @@
-#include "command/parser.h"
+#include "parser.h"
 #include <ctype.h>
 
 void parser_init(struct parser* p, size_t len, const char input[len]) {

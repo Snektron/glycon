@@ -1,10 +1,10 @@
-#ifndef _GLYDB_COMMAND_COMMAND_H
-#define _GLYDB_COMMAND_COMMAND_H
+#ifndef _GLYDB_COMMAND_H
+#define _GLYDB_COMMAND_H
 
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "command/parser.h"
+#include "parser.h"
 
 struct interpreter;
 
@@ -77,8 +77,6 @@ void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* const* spec, siz
 void cmd_parser_deinit(struct cmd_parser* cmdp);
 
 bool cmd_parse(struct cmd_parser* cmdp);
-
-void cmd_report_help(const struct cmd* const* spec, size_t len, const char* const* command);
 
 inline bool cmd_option_is_valid(const struct cmd_option* opt) {
     return opt->name || opt->shorthand;

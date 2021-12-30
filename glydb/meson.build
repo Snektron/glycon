@@ -9,11 +9,13 @@ project(
 )
 
 sources = [
-    'src/main.c',
+    'src/command.c',
     'src/connection.c',
     'src/interpreter.c',
-    'src/command/command.c',
-    'src/command/parser.c',
+    'src/main.c',
+    'src/parser.c',
+    'src/commands/commands.c',
+    'src/commands/help.c',
 ]
 
 deps = [

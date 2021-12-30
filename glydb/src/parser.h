@@ -1,5 +1,5 @@
-#ifndef _GLYDB_COMMAND_PARSER_H
-#define _GLYDB_COMMAND_PARSER_H
+#ifndef _GLYDB_PARSER_H
+#define _GLYDB_PARSER_H
 
 #include <stddef.h>
 #include <stdbool.h>
