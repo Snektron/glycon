@@ -4,22 +4,6 @@
 #include <string.h>
 #include <stdio.h>
 
-static void handle(struct interpreter* interp, size_t positionals_len, const char* const* positionals);
-
-const struct cmd command_help = {
-    .type = CMD_TYPE_LEAF,
-    .name = "help",
-    .help = "help for 'help'",
-    {.leaf = {
-        .options = NULL,
-        .positionals = (struct cmd_positional[]){
-            {"command", "command to get help for", CMD_OPTIONAL | CMD_VARIADIC},
-            {}
-        },
-        .payload = handle
-    }
-}};
-
 static void report_help(const struct cmd* const* spec, size_t len, const char* const* command) {
     const struct cmd* cmd = NULL;
     size_t i = 0;
@@ -60,8 +44,21 @@ no_such_command:
     puts("'");
 }
 
-
-static void handle(struct interpreter* interp, size_t positionals_len, const char* const* positionals) {
+static void help(struct interpreter* interp, size_t positionals_len, const char* const* positionals) {
     (void) interp;
     report_help(commands, positionals_len, positionals);
 }
+
+const struct cmd command_help = {
+    .type = CMD_TYPE_LEAF,
+    .name = "help",
+    .help = "help for 'help'",
+    {.leaf = {
+        .options = NULL,
+        .positionals = (struct cmd_positional[]){
+            {"command", "command to get help for", CMD_OPTIONAL | CMD_VARIADIC},
+            {}
+        },
+        .payload = help
+    }
+}};
