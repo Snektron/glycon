@@ -5,6 +5,8 @@
 #include <termios.h>
 
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 // https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
 static bool set_serial_attribs(int fd, speed_t speed, int parity) {
@@ -38,21 +40,38 @@ static bool set_serial_attribs(int fd, speed_t speed, int parity) {
     return true;
 }
 
+void conn_init(struct connection* conn) {
+    conn->port = NULL;
+    conn->fd = -1;
+}
+
 enum conn_status conn_open_serial(struct connection* conn, const char* path) {
-    conn->fd = open(path, O_RDWR | O_NOCTTY | O_SYNC);
-    if (conn->fd == -1) {
+    if (conn_is_open(conn))
+        return CONN_ERR_ALREADY_OPEN;
+
+    int fd = open(path, O_RDWR | O_NOCTTY | O_SYNC);
+    if (fd == -1) {
         return CONN_ERR_SERIAL_OPEN;
     }
 
     // TODO: Don't hardcode serial attributes
-    if (!set_serial_attribs(conn->fd, B115200, 0)) {
-        close(conn->fd);
+    if (!set_serial_attribs(fd, B115200, 0)) {
+        close(fd);
         return CONN_ERR_SERIAL_ATTRIBS;
     }
 
+    conn->fd = fd;
+    conn->port = strdup(path);
     return CONN_OK;
 }
 
 void conn_close(struct connection* conn) {
+    free(conn->port);
     close(conn->fd);
+    conn->fd = -1;
+    conn->port = NULL;
+}
+
+bool conn_is_open(struct connection* conn) {
+    return conn->fd != -1;
 }

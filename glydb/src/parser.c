@@ -19,6 +19,10 @@ bool parser_test_ws(struct parser* p) {
     }
 }
 
+bool parser_test_ws_or_end(struct parser* p) {
+    return parser_is_at_end(p) || parser_test_ws(p);
+}
+
 bool parser_skip_ws(struct parser* p) {
     if (!parser_test_ws(p))
         return false;
@@ -31,15 +35,13 @@ bool parser_skip_ws(struct parser* p) {
 }
 
 size_t parser_eat_word(struct parser* p) {
-    int c = parser_peek(p);
-    if (!isalnum(c) && c != '-')
+    if (parser_test_ws_or_end(p))
         return 0;
 
     ++p->offset;
     size_t len = 1;
     while (true) {
-        c = parser_peek(p);
-        if (!isalnum(c) && c != '-')
+        if (parser_test_ws_or_end(p))
             return len;
         ++p->offset;
         ++len;

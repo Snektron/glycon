@@ -12,5 +12,6 @@ extern const struct cmd* commands[];
 extern const struct cmd command_help;
 extern const struct cmd command_quit;
 extern const struct cmd command_memory;
+extern const struct cmd command_connection;
 
 #endif

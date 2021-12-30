@@ -150,7 +150,7 @@ static void report_help(const struct help* h) {
 no_such_command:
     printf("error: invalid command '");
     print_command(h);
-    puts("'");
+    puts("'.");
 }
 
 static void help(struct interpreter* interp, size_t len, const char* const positionals[len]) {
@@ -166,7 +166,7 @@ const struct cmd command_help = {
     {.leaf = {
         .options = NULL,
         .positionals = (struct cmd_positional[]){
-            {"command", "command to get help for.", CMD_OPTIONAL | CMD_VARIADIC},
+            {"command", "Command to get help for.", CMD_OPTIONAL | CMD_VARIADIC},
             {}
         },
         .payload = help

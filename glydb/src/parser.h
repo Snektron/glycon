@@ -46,10 +46,11 @@ inline size_t parser_remaining_len(struct parser* p) {
 void parser_init(struct parser* p, size_t len, const char input[len]);
 
 bool parser_test_ws(struct parser* p);
+bool parser_test_ws_or_end(struct parser* p);
 
 bool parser_skip_ws(struct parser* p);
 
-// Match a [a-zA-Z0-9-]+
+// Match any whitespace-delimited word.
 size_t parser_eat_word(struct parser* p);
 
 #endif
