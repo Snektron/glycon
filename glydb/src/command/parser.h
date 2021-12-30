@@ -10,7 +10,6 @@ struct parser {
     size_t offset;
 };
 
-
 inline int parser_is_at_end(struct parser* p) {
     return p->offset >= p->length;
 }
