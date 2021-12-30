@@ -24,13 +24,7 @@ static void print_command(struct cmd_parser* cmdp) {
             printf(" ");
         }
 
-        size_t i = 0;
-        for (; spec && spec[i]; ++i) {
-            if (strncmp(command, spec[i]->name, command_len) == 0)
-                break;
-        }
-
-        const struct cmd* cmd = spec[i];
+        const struct cmd* cmd = cmd_match_command(spec, command_len, command);
         if (!cmd) {
             // No match: just print the word
             printf("%.*s", (int) command_len, command);
@@ -329,18 +323,12 @@ static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* const* spec) {
         return false;
     }
 
-    for (size_t i = 0; spec && spec[i]; ++i) {
-        const struct cmd* cmd = spec[i];
-        const char* name = cmd->name;
-        if (strncmp(command, name, command_len) != 0) {
-            continue;
-        }
-
-        // Matched a (sub)command.
-        cmdp->matched_command = cmd;
-        switch (cmd->type) {
+    const struct cmd* matched = cmd_match_command(spec, command_len, command);
+    if (matched) {
+        cmdp->matched_command = matched;
+        switch (matched->type) {
             case CMD_TYPE_DIRECTORY:
-                return parse_cmd(cmdp, cmd->directory.subcommands);
+                return parse_cmd(cmdp, matched->directory.subcommands);
             case CMD_TYPE_LEAF:
                 return parse_leaf(cmdp);
         }
@@ -379,4 +367,18 @@ void cmd_parser_deinit(struct cmd_parser* cmdp) {
 
 bool cmd_parse(struct cmd_parser* cmdp) {
     return parse_cmd(cmdp, cmdp->spec);
+}
+
+const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]) {
+    if (!spec)
+        return NULL;
+
+    for (size_t i = 0; spec[i]; ++i) {
+        const struct cmd* cmd = spec[i];
+        if (strncmp(command, cmd->name, len) == 0) {
+            return cmd;
+        }
+    }
+
+    return NULL;
 }

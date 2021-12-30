@@ -24,7 +24,11 @@ void interpreter_do_line(struct interpreter* interp, size_t len, const char line
         && cmdp.matched_command->type == CMD_TYPE_LEAF
         && cmdp.matched_command->leaf.payload
     ) {
-        ((command_handler_t) cmdp.matched_command->leaf.payload)(interp, cmdp.positionals_len, (const char* const*) cmdp.positionals);
+        ((command_handler_t) cmdp.matched_command->leaf.payload)(
+            interp,
+            cmdp.positionals_len,
+            (const char* const*) cmdp.positionals
+        );
     }
 
     cmd_parser_deinit(&cmdp);

@@ -78,6 +78,8 @@ void cmd_parser_deinit(struct cmd_parser* cmdp);
 
 bool cmd_parse(struct cmd_parser* cmdp);
 
+const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]);
+
 inline bool cmd_option_is_valid(const struct cmd_option* opt) {
     return opt->name || opt->shorthand;
 }

@@ -5,11 +5,12 @@
 
 struct interpreter;
 
-typedef void (*command_handler_t)(struct interpreter* interp, size_t positionals_len, const char* const* positionals);
+typedef void (*command_handler_t)(struct interpreter* interp, size_t len, const char* const positionals[len]);
 
 extern const struct cmd* commands[];
 
 extern const struct cmd command_help;
 extern const struct cmd command_quit;
+extern const struct cmd command_memory;
 
 #endif

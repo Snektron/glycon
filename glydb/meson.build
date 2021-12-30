@@ -16,6 +16,7 @@ sources = [
     'src/parser.c',
     'src/commands/commands.c',
     'src/commands/help.c',
+    'src/commands/memory.c',
     'src/commands/quit.c',
 ]
 
