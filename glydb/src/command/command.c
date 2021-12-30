@@ -11,7 +11,7 @@ static void print_command(struct cmd_parser* cmdp) {
     p.offset = 0;
     bool first = true;
 
-    const struct cmd* cmd = cmdp->spec;
+    const struct cmd* const* spec = cmdp->spec;
     while (p.offset <= cmdp->command_offset) {
         parser_skip_ws(&p);
         const char* command = parser_remaining(&p);
@@ -24,12 +24,14 @@ static void print_command(struct cmd_parser* cmdp) {
             printf(" ");
         }
 
-        while (cmd->type != CMD_TYPE_END && strncmp(command, cmd->name, command_len) != 0) {
-            ++cmd;
-            continue;
+        size_t i = 0;
+        for (; spec && spec[i]; ++i) {
+            if (strncmp(command, spec[i]->name, command_len) == 0)
+                break;
         }
 
-        if (cmd->type == CMD_TYPE_END) {
+        const struct cmd* cmd = spec[i];
+        if (!cmd) {
             // No match: just print the word
             printf("%.*s", (int) command_len, command);
         } else {
@@ -38,7 +40,7 @@ static void print_command(struct cmd_parser* cmdp) {
         }
 
         if (cmd->type == CMD_TYPE_DIRECTORY)
-            cmd = cmd->directory.subcommands;
+            spec = cmd->directory.subcommands;
     }
 }
 
@@ -123,7 +125,7 @@ static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* 
         return false;
     }
 
-    for (size_t i = 0; options && (options[i].name || options[i].shorthand); ++i) {
+    for (size_t i = 0; options && cmd_option_is_valid(&options[i]); ++i) {
         const struct cmd_option* opt = &options[i];
         if (strncmp(opt->name, option, option_len) != 0)
             continue;
@@ -232,7 +234,7 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
     {
         const struct cmd_positional* pos = cmd->leaf.positionals;
         bool seen_optional = false;
-        while (pos && pos->value_name) {
+        while (pos && cmd_positional_is_valid(pos)) {
             assert(!variadic); // Must only occur on the last positional
             ++max_positionals;
             if (pos->flags & CMD_OPTIONAL) {
@@ -302,7 +304,7 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
     return true;
 }
 
-static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* spec) {
+static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* const* spec) {
     struct parser* p = &cmdp->p;
     parser_skip_ws(p);
     if (parser_is_at_end(p)) {
@@ -324,19 +326,16 @@ static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* spec) {
         return false;
     }
 
-    const struct cmd* cmd = spec;
-    while (cmd->type != CMD_TYPE_END) {
+    for (size_t i = 0; spec && spec[i]; ++i) {
+        const struct cmd* cmd = spec[i];
         const char* name = cmd->name;
         if (strncmp(command, name, command_len) != 0) {
-            ++cmd;
             continue;
         }
 
         // Matched a (sub)command.
         cmdp->matched_command = cmd;
         switch (cmd->type) {
-            case CMD_TYPE_END:
-                assert(false);
             case CMD_TYPE_DIRECTORY:
                 return parse_cmd(cmdp, cmd->directory.subcommands);
             case CMD_TYPE_LEAF:
@@ -349,7 +348,7 @@ static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* spec) {
     return false;
 }
 
-void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len, const char line[len]) {
+void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* const* spec, size_t len, const char line[len]) {
     parser_init(&cmdp->p, len, line);
     cmdp->spec = spec;
     cmdp->matched_command = NULL;
@@ -362,7 +361,7 @@ void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len
 void cmd_parser_deinit(struct cmd_parser* cmdp) {
     if (cmdp->matched_command && cmdp->matched_command->type == CMD_TYPE_LEAF) {
         const struct cmd_option* options = cmdp->matched_command->leaf.options;
-        for (size_t i = 0; options && (options[i].name || options[i].shorthand); ++i) {
+        for (size_t i = 0; options && cmd_option_is_valid(&options[i]); ++i) {
             free(cmdp->options[i]);
         }
     }

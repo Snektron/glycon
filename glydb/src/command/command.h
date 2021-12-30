@@ -27,13 +27,12 @@ struct cmd_positional {
 };
 
 enum cmd_type {
-    CMD_TYPE_END = 0,
     CMD_TYPE_DIRECTORY,
     CMD_TYPE_LEAF
 };
 
 struct cmd_directory {
-    const struct cmd* subcommands;
+    const struct cmd** subcommands;
 };
 
 struct cmd_leaf {
@@ -55,7 +54,7 @@ struct cmd {
 
 struct cmd_parser {
     struct parser p;
-    const struct cmd* spec;
+    const struct cmd* const* spec;
 
     // The most recently matched command.
     // May be empty if the input was empty, which is technically a valid command.
@@ -73,10 +72,18 @@ struct cmd_parser {
     size_t positionals_len;
 };
 
-void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* spec, size_t len, const char line[len]);
+void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* const* spec, size_t len, const char line[len]);
 
 void cmd_parser_deinit(struct cmd_parser* cmdp);
 
 bool cmd_parse(struct cmd_parser* cmdp);
+
+inline bool cmd_option_is_valid(const struct cmd_option* opt) {
+    return opt->name || opt->shorthand;
+}
+
+inline bool cmd_positional_is_valid(const struct cmd_positional* pos) {
+    return pos->value_name;
+}
 
 #endif
