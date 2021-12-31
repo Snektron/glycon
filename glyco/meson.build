@@ -7,6 +7,7 @@ sources = [
 glyco_elf = executable(
     'glyco.elf',
     sources,
+    include_directories: [bdbp_inc, include_directories('src')],
     override_options: [
         'buildtype=minsize'
     ]

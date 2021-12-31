@@ -1,10 +1,10 @@
 sources = [
+    'src/bdbp_util.c',
     'src/command.c',
     'src/connection.c',
     'src/debugger.c',
     'src/main.c',
     'src/parser.c',
-    'src/protocol.c',
     'src/commands/commands.c',
     'src/commands/connection.c',
     'src/commands/help.c',
@@ -22,5 +22,5 @@ executable(
     sources,
     dependencies: deps,
     native: true,
-    include_directories: include_directories('src'),
+    include_directories: [bdbp_inc, include_directories('src')],
 )

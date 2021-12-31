@@ -1,6 +1,7 @@
 #include "pinout.h"
 #include "serial.h"
-#include "protocol.h"
+
+#include "bdbp/binary_debug_protocol.h"
 
 #include <stdint.h>
 
@@ -20,11 +21,11 @@ int main(void) {
         PINOUT_LED_PORT ^= PINOUT_LED_MASK;
         uint8_t cmd = serial_read_byte();
         switch (cmd) {
-            case GLYCO_CMD_PING:
-                serial_write_byte(GLYCO_STATUS_SUCCESS);
+            case BDBP_CMD_PING:
+                serial_write_byte(BDBP_STATUS_SUCCESS);
                 break;
             default:
-                serial_write_byte(GLYCO_STATUS_UNKNOWN_CMD);
+                serial_write_byte(BDBP_STATUS_UNKNOWN_CMD);
                 break;
         }
     }
