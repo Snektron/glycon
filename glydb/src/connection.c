@@ -4,10 +4,11 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 // https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
 static bool set_serial_attribs(int fd, speed_t speed, int parity) {
@@ -30,9 +31,9 @@ static bool set_serial_attribs(int fd, speed_t speed, int parity) {
     tty.c_cflag &= ~(CSIZE | PARENB | PARODD | CSTOPB | CRTSCTS);
     tty.c_cflag |= CS8 | CLOCAL | CREAD | parity;
 
-    // Read blocks until one byte is received, no timeout between characters
-    tty.c_cc[VMIN] = 1;
-    tty.c_cc[VTIME] = 0;
+    // Reads block until a 2-second timeout has been elapsed.
+    tty.c_cc[VMIN] = 0;
+    tty.c_cc[VTIME] = 20;
 
     if (tcsetattr(fd, TCSANOW, &tty) != 0) {
         return false;
@@ -74,4 +75,29 @@ void conn_close(struct connection* conn) {
 
 bool conn_is_open(struct connection* conn) {
     return conn->fd != -1;
+}
+
+int conn_write_byte(struct connection* conn, uint8_t byte) {
+    ssize_t w = write(conn->fd, &byte, 1);
+    if (w < 0) {
+        return -1;
+    } else if (w == 0) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
+    return 0;
+}
+
+int conn_read_byte(struct connection* conn) {
+    uint8_t byte;
+    ssize_t r = read(conn->fd, &byte, 1);
+    if (r < 0) {
+        return -1;
+    } else if (r == 0) {
+        errno = ETIMEDOUT;
+        return -1;
+    } else {
+        return byte;
+    }
 }

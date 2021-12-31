@@ -5,5 +5,6 @@ const struct cmd* commands[] = {
     &command_quit,
     &command_memory,
     &command_connection,
+    &command_ping,
     NULL
 };

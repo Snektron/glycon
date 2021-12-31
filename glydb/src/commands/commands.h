@@ -13,5 +13,6 @@ extern const struct cmd command_help;
 extern const struct cmd command_quit;
 extern const struct cmd command_memory;
 extern const struct cmd command_connection;
+extern const struct cmd command_ping;
 
 #endif

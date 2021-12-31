@@ -2,6 +2,7 @@
 #define _GLYDB_CONNECTION_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 struct connection {
     char* port;
@@ -25,5 +26,10 @@ void conn_close(struct connection* conn);
 // Note that this doesn't check whether the other end of the connection is actually
 // online.
 bool conn_is_open(struct connection* conn);
+
+int conn_write_byte(struct connection* conn, uint8_t byte);
+
+// Returns -1 on error.
+int conn_read_byte(struct connection* conn);
 
 #endif

@@ -53,3 +53,12 @@ void debugger_repl(struct debugger* dbg) {
         }
     }
 }
+
+bool debugger_require_connection(struct debugger* dbg) {
+    if (!conn_is_open(&dbg->conn)) {
+        printf("error: No active connection. Connect to a device using `connection open`.\n");
+        return true;
+    }
+
+    return false;
+}

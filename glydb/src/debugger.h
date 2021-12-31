@@ -19,4 +19,6 @@ void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]);
 
 void debugger_repl(struct debugger* dbg);
 
+bool debugger_require_connection(struct debugger* dbg);
+
 #endif
