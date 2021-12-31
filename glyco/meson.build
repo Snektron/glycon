@@ -1,17 +1,3 @@
-project(
-    'glyco',
-    'c',
-    default_options: [
-        'c_std=gnu11',
-        'b_lto=true',
-        'buildtype=minsize',
-    ]
-)
-
-if not meson.is_cross_build()
-    error('Glycon coprocessor should be cross-compiled: meson glycon/glyco build --cross-file glycon/cross/avr-atmega2560-cross.ini')
-endif
-
 sources = [
     'src/main.c',
     'src/serial.c',
@@ -21,6 +7,9 @@ sources = [
 glyco_elf = executable(
     'glyco.elf',
     sources,
+    override_options: [
+        'buildtype=minsize'
+    ]
 )
 
 glyco_ihx = custom_target(
@@ -48,5 +37,5 @@ run_target(
         '-U', 'flash:w:@0@:i'.format(glyco_ihx.full_path()),
         '-P', get_option('port')
     ],
-    depends: glyco_ihx
+    depends: glyco_ihx,
 )

@@ -1,13 +1,3 @@
-project(
-    'glydb',
-    'c',
-    default_options: [
-        'c_std=gnu11',
-        'b_lto=true',
-        'buildtype=debugoptimized',
-    ]
-)
-
 sources = [
     'src/command.c',
     'src/connection.c',
@@ -24,12 +14,13 @@ sources = [
 ]
 
 deps = [
-    dependency('libeditline'),
+    dependency('libeditline', native: true),
 ]
 
 executable(
     'glydb',
     sources,
     dependencies: deps,
-    include_directories: include_directories('src')
+    native: true,
+    include_directories: include_directories('src'),
 )
