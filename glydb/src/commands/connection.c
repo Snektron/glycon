@@ -3,20 +3,14 @@
 #include "connection.h"
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 static void connection_open(struct debugger* dbg, size_t len, const char* const args[len]) {
-    switch (conn_open_serial(&dbg->conn, args[0])) {
-        case CONN_OK:
-            break;
-        case CONN_ERR_SERIAL_OPEN:
-            printf("error: Failed to open serial port '%s'.\n", args[0]);
-            break;
-        case CONN_ERR_SERIAL_ATTRIBS:
-            printf("error: Failed to configure serial port '%s'.\n", args[0]);
-            break;
-        case CONN_ERR_ALREADY_OPEN:
-            puts("error: A connection is already open. Close it first with `connection close`.");
-            break;
+    if (conn_is_open(&dbg->conn)) {
+        puts("error: A connection is already open. Close it first with `connection close`.");
+    } else if (!conn_open_serial(&dbg->conn, args[0])) {
+        printf("error: Failed to open serial port '%s': %s.\n", args[0], strerror(errno));
     }
 }
 

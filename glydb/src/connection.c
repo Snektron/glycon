@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 // https://stackoverflow.com/questions/6947413/how-to-open-read-and-write-from-serial-port-in-c
 static bool set_serial_attribs(int fd, speed_t speed, int parity) {
@@ -45,24 +46,23 @@ void conn_init(struct connection* conn) {
     conn->fd = -1;
 }
 
-enum conn_status conn_open_serial(struct connection* conn, const char* path) {
-    if (conn_is_open(conn))
-        return CONN_ERR_ALREADY_OPEN;
+bool conn_open_serial(struct connection* conn, const char* path) {
+    assert(!conn_is_open(conn));
 
     int fd = open(path, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd == -1) {
-        return CONN_ERR_SERIAL_OPEN;
+        return false;
     }
 
     // TODO: Don't hardcode serial attributes
     if (!set_serial_attribs(fd, B115200, 0)) {
         close(fd);
-        return CONN_ERR_SERIAL_ATTRIBS;
+        return false;
     }
 
     conn->fd = fd;
     conn->port = strdup(path);
-    return CONN_OK;
+    return true;
 }
 
 void conn_close(struct connection* conn) {
