@@ -44,17 +44,17 @@ static void print_command(struct cmd_parser* cmdp) {
 static void report_invalid_command(struct cmd_parser* cmdp) {
     printf("error: invalid command '");
     print_command(cmdp);
-    puts("'");
+    puts("'.");
 }
 
 static void report_unexpected_character(struct cmd_parser* cmdp) {
     int c = parser_peek(&cmdp->p);
     if (c < 0) {
-        printf("error: unexpected end of command\n");
+        printf("error: unexpected end of command.\n");
     } else if (isprint(c)) {
-        printf("error: unexpected character %c\n", c);
+        printf("error: unexpected character %c.\n", c);
     } else {
-        printf("error: unexpected character \\x%02X\n", c);
+        printf("error: unexpected character \\x%02X.\n", c);
     }
 }
 
@@ -64,33 +64,33 @@ static void report_missing_argument(struct cmd_parser* cmdp, const struct cmd_op
     printf(": missing argument <%s> to option ", opt->value_name);
 
     if (shorthand) {
-        printf("-%c\n", opt->shorthand);
+        printf("-%c.\n", opt->shorthand);
     } else {
-        printf("--%s\n", opt->name);
+        printf("--%s.\n", opt->name);
     }
 }
 
 static void report_invalid_long_option(struct cmd_parser* cmdp, size_t len, const char opt[len]) {
     printf("error: ");
     print_command(cmdp);
-    printf(": invalid option --%.*s\n", (int) len, opt);
+    printf(": invalid option --%.*s.\n", (int) len, opt);
 }
 
 static void report_invalid_short_option(struct cmd_parser* cmdp, char opt) {
     printf("error: ");
     print_command(cmdp);
-    printf(": invalid option -%c\n", opt);
+    printf(": invalid option -%c.\n", opt);
 }
 
 static void report_duplicate_option(struct cmd_parser* cmdp, const struct cmd_option* opt) {
     printf("error: ");
     print_command(cmdp);
     if (opt->shorthand && opt->name) {
-        printf(": duplicate option -%c/--%s\n", opt->shorthand, opt->name);
+        printf(": duplicate option -%c/--%s.\n", opt->shorthand, opt->name);
     } else if (opt->shorthand) {
-        printf(": duplicate option -%c\n", opt->shorthand);
+        printf(": duplicate option -%c.\n", opt->shorthand);
     } else {
-        printf(": duplicate option --%s\n", opt->name);
+        printf(": duplicate option --%s.\n", opt->name);
     }
 }
 
@@ -98,13 +98,13 @@ static void report_missing_positional(struct cmd_parser* cmdp) {
     printf("error: ");
     print_command(cmdp);
     size_t i = cmdp->positionals_len;
-    printf(": missing required positional argument <%s>\n", cmdp->matched_command->leaf.positionals[i].value_name);
+    printf(": missing required positional argument <%s>.\n", cmdp->matched_command->leaf.positionals[i].value_name);
 }
 
 static void report_superficial_positional(struct cmd_parser* cmdp, size_t len, const char pos[len]) {
     printf("error: ");
     print_command(cmdp);
-    printf(": superficial positional argument '%.*s'\n", (int) len, pos);
+    printf(": superficial positional argument '%.*s'.\n", (int) len, pos);
 }
 
 static bool is_flag(const char text[]) {
