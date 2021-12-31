@@ -3,9 +3,9 @@
 
 #include "command.h"
 
-struct interpreter;
+struct debugger;
 
-typedef void (*command_handler_t)(struct interpreter* interp, size_t len, const char* const positionals[len]);
+typedef void (*command_handler_t)(struct debugger* dbg, size_t len, const char* const positionals[len]);
 
 extern const struct cmd* commands[];
 

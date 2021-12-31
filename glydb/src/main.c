@@ -1,5 +1,5 @@
 #include "connection.h"
-#include "interpreter.h"
+#include "debugger.h"
 
 #include <unistd.h>
 
@@ -7,9 +7,9 @@
 #include <stdlib.h>
 
 int main(int argc, char* argv[]) {
-    struct interpreter interp;
-    interpreter_init(&interp);
-    interpreter_repl(&interp);
-    interpreter_deinit(&interp);
+    struct debugger dbg;
+    debugger_init(&dbg);
+    debugger_repl(&dbg);
+    debugger_deinit(&dbg);
     return EXIT_SUCCESS;
 }

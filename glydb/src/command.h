@@ -6,8 +6,6 @@
 
 #include "parser.h"
 
-struct interpreter;
-
 struct cmd_option {
     const char* name;
     char shorthand;

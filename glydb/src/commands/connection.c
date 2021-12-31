@@ -1,11 +1,11 @@
 #include "commands/commands.h"
-#include "interpreter.h"
+#include "debugger.h"
 #include "connection.h"
 
 #include <stdio.h>
 
-static void connection_open(struct interpreter* interp, size_t len, const char* const args[len]) {
-    switch (conn_open_serial(&interp->conn, args[0])) {
+static void connection_open(struct debugger* dbg, size_t len, const char* const args[len]) {
+    switch (conn_open_serial(&dbg->conn, args[0])) {
         case CONN_OK:
             break;
         case CONN_ERR_SERIAL_OPEN:
@@ -20,13 +20,17 @@ static void connection_open(struct interpreter* interp, size_t len, const char* 
     }
 }
 
-static void connection_close(struct interpreter* interp, size_t len, const char* const args[len]) {
-    conn_close(&interp->conn);
+static void connection_close(struct debugger* dbg, size_t len, const char* const args[len]) {
+    (void) len;
+    (void) args;
+    conn_close(&dbg->conn);
 }
 
-static void connection_status(struct interpreter* interp, size_t len, const char* const args[len]) {
-    if (conn_is_open(&interp->conn)) {
-        printf("Currently connected to serial device on port '%s'.\n", interp->conn.port);
+static void connection_status(struct debugger* dbg, size_t len, const char* const args[len]) {
+    (void) len;
+    (void) args;
+    if (conn_is_open(&dbg->conn)) {
+        printf("Currently connected to serial device on port '%s'.\n", dbg->conn.port);
     } else {
         puts("No active connection.");
     }

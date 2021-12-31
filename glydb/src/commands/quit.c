@@ -1,10 +1,10 @@
 #include "commands/commands.h"
-#include "interpreter.h"
+#include "debugger.h"
 
-void quit(struct interpreter* interp, size_t positionals_len, const char* const* positionals) {
-    (void) positionals_len;
-    (void) positionals;
-    interp->quit = true;
+static void quit(struct debugger* dbg, size_t len, const char* const args[len]) {
+    (void) len;
+    (void) args;
+    dbg->quit = true;
 }
 
 const struct cmd command_quit = {

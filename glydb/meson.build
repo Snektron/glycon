@@ -9,11 +9,11 @@ project(
 )
 
 sources = [
-    'src/command.c',
     'src/connection.c',
-    'src/interpreter.c',
+    'src/debugger.c',
     'src/main.c',
     'src/parser.c',
+    'src/command.c',
     'src/commands/commands.c',
     'src/commands/connection.c',
     'src/commands/help.c',

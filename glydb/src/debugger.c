@@ -1,4 +1,4 @@
-#include "interpreter.h"
+#include "debugger.h"
 #include "command.h"
 #include "commands/commands.h"
 
@@ -10,16 +10,16 @@
 
 static const char* prompt = "(glydb) ";
 
-void interpreter_init(struct interpreter* interp) {
-    interp->quit = false;
-    conn_init(&interp->conn);
+void debugger_init(struct debugger* dbg) {
+    dbg->quit = false;
+    conn_init(&dbg->conn);
 }
 
-void interpreter_deinit(struct interpreter* interp) {
-    conn_close(&interp->conn);
+void debugger_deinit(struct debugger* dbg) {
+    conn_close(&dbg->conn);
 }
 
-void interpreter_do_line(struct interpreter* interp, size_t len, const char line[len]) {
+void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]) {
     struct cmd_parser cmdp;
     cmd_parser_init(&cmdp, commands, len, line);
 
@@ -27,7 +27,7 @@ void interpreter_do_line(struct interpreter* interp, size_t len, const char line
         switch (cmdp.matched_command->type) {
             case CMD_TYPE_LEAF: {
                 command_handler_t handler = cmdp.matched_command->leaf.payload;
-                handler(interp, cmdp.positionals_len, (const char* const*) cmdp.positionals);
+                handler(dbg, cmdp.positionals_len, (const char* const*) cmdp.positionals);
                 break;
             }
             case CMD_TYPE_DIRECTORY:
@@ -39,16 +39,16 @@ void interpreter_do_line(struct interpreter* interp, size_t len, const char line
     cmd_parser_deinit(&cmdp);
 }
 
-void interpreter_repl(struct interpreter* interp) {
-    interp->quit = false;
+void debugger_repl(struct debugger* dbg) {
+    dbg->quit = false;
 
-    while (!interp->quit) {
+    while (!dbg->quit) {
         char* line = readline(prompt);
         if (!line) {
             return;
         } else {
             size_t len = strlen(line);
-            interpreter_do_line(interp, len, line);
+            debugger_do_line(dbg, len, line);
             free(line);
         }
     }

@@ -1,5 +1,5 @@
 #include "commands/commands.h"
-#include "interpreter.h"
+#include "debugger.h"
 
 static const struct cmd* memory_commands[] = {
     &(struct cmd){CMD_TYPE_LEAF, "write", "Help for 'memory write'.", {.leaf = {

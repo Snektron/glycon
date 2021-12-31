@@ -1,5 +1,5 @@
 #include "commands/commands.h"
-#include "interpreter.h"
+#include "debugger.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -153,9 +153,9 @@ no_such_command:
     puts("'.");
 }
 
-static void help(struct interpreter* interp, size_t len, const char* const positionals[len]) {
-    (void) interp;
-    struct help h = {commands, len, positionals};
+static void help(struct debugger* dbg, size_t len, const char* const args[len]) {
+    (void) dbg;
+    struct help h = {commands, len, args};
     report_help(&h);
 }
 
