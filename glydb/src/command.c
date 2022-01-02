@@ -1,4 +1,5 @@
 #include "command.h"
+#include "parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,49 +7,11 @@
 #include <assert.h>
 #include <ctype.h>
 
-static void print_command(struct cmd_parser* cmdp) {
-    struct parser p = cmdp->p;
-    p.offset = 0;
-    bool first = true;
-
-    const struct cmd* const* spec = cmdp->spec;
-    while (p.offset <= cmdp->command_offset) {
-        parser_skip_ws(&p);
-        const char* command = parser_remaining(&p);
-        size_t command_len = parser_eat_word(&p);
-        assert(command_len != 0);
-
-        if (first) {
-            first = false;
-        } else {
-            printf(" ");
-        }
-
-        const struct cmd* cmd = cmd_match_command(spec, command_len, command);
-        if (!cmd) {
-            // No match: just print the word
-            printf("%.*s", (int) command_len, command);
-        } else {
-            // Print the full name for clarity.
-            printf("%s", cmd->name);
-        }
-
-        if (cmd && cmd->type == CMD_TYPE_DIRECTORY) {
-            spec = cmd->directory.subcommands;
-        } else {
-            spec = NULL;
-        }
-    }
+static void report_invalid_command(size_t len, const char text[len]) {
+    printf("error: invalid command '%.*s'\n", (int) len, text);
 }
 
-static void report_invalid_command(struct cmd_parser* cmdp) {
-    printf("error: invalid command '");
-    print_command(cmdp);
-    puts("'.");
-}
-
-static void report_unexpected_character(struct cmd_parser* cmdp) {
-    int c = parser_peek(&cmdp->p);
+static void report_unexpected_character(int c) {
     if (c < 0) {
         printf("error: unexpected end of command.\n");
     } else if (isprint(c)) {
@@ -58,11 +21,8 @@ static void report_unexpected_character(struct cmd_parser* cmdp) {
     }
 }
 
-static void report_missing_argument(struct cmd_parser* cmdp, const struct cmd_option* opt, bool shorthand) {
-    printf("error: ");
-    print_command(cmdp);
-    printf(": missing argument <%s> to option ", opt->value_name);
-
+static void report_missing_argument(const struct cmd_option* opt, bool shorthand) {
+    printf("error: missing argument <%s> to option ", opt->value_name);
     if (shorthand) {
         printf("-%c.\n", opt->shorthand);
     } else {
@@ -70,55 +30,44 @@ static void report_missing_argument(struct cmd_parser* cmdp, const struct cmd_op
     }
 }
 
-static void report_invalid_long_option(struct cmd_parser* cmdp, size_t len, const char opt[len]) {
-    printf("error: ");
-    print_command(cmdp);
-    printf(": invalid option --%.*s.\n", (int) len, opt);
+static void report_invalid_long_option(size_t len, const char opt[len]) {
+    printf("error: invalid option --%.*s.\n", (int) len, opt);
 }
 
-static void report_invalid_short_option(struct cmd_parser* cmdp, char opt) {
-    printf("error: ");
-    print_command(cmdp);
-    printf(": invalid option -%c.\n", opt);
+static void report_invalid_short_option(char opt) {
+    printf("error: invalid option -%c.\n", opt);
 }
 
-static void report_duplicate_option(struct cmd_parser* cmdp, const struct cmd_option* opt) {
-    printf("error: ");
-    print_command(cmdp);
+static void report_duplicate_option(const struct cmd_option* opt) {
+    printf("error: duplicate option ");
     if (opt->shorthand && opt->name) {
-        printf(": duplicate option -%c/--%s.\n", opt->shorthand, opt->name);
+        printf("-%c/--%s.\n", opt->shorthand, opt->name);
     } else if (opt->shorthand) {
-        printf(": duplicate option -%c.\n", opt->shorthand);
+        printf("-%c.\n", opt->shorthand);
     } else {
-        printf(": duplicate option --%s.\n", opt->name);
+        printf("--%s.\n", opt->name);
     }
 }
 
-static void report_missing_positional(struct cmd_parser* cmdp) {
-    printf("error: ");
-    print_command(cmdp);
-    size_t i = cmdp->positionals_len;
-    printf(": missing required positional argument <%s>.\n", cmdp->matched_command->leaf.positionals[i].value_name);
+static void report_missing_positional(const struct cmd* cmd, size_t i) {
+    printf("error: missing required positional argument <%s>.\n", cmd->leaf.positionals[i].value_name);
 }
 
-static void report_superficial_positional(struct cmd_parser* cmdp, size_t len, const char pos[len]) {
-    printf("error: ");
-    print_command(cmdp);
-    printf(": superficial positional argument '%.*s'.\n", (int) len, pos);
+static void report_superficial_positional(size_t len, const char pos[len]) {
+    printf("error: superficial positional argument '%.*s'.\n", (int) len, pos);
 }
 
 static bool is_flag(const char text[]) {
     return text[0] == '-';
 }
 
-static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* options) {
-    struct parser* p = &cmdp->p;
+static bool parse_long_option(struct cmd_parse_result* result, struct parser* p, const struct cmd_option* options) {
     // At this point, the leading -- is already parsed.
     const char* option = parser_remaining(p);
     size_t option_len = parser_eat_word(p);
     if (option_len == 0) {
         // Note: Also matches '--'.
-        report_unexpected_character(cmdp);
+        report_unexpected_character(parser_peek(p));
         return false;
     }
 
@@ -127,19 +76,19 @@ static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* 
         if (strncmp(opt->name, option, option_len) != 0)
             continue;
 
-        if (cmdp->options[i]) {
-            report_duplicate_option(cmdp, opt);
+        if (result->options[i]) {
+            report_duplicate_option(opt);
             return false;
         }
 
         if (!opt->value_name) {
-            cmdp->options[i] = strdup("");
+            result->options[i] = strdup("");
             return true;
         }
 
         parser_skip_ws(p);
         if (parser_is_at_end(p)) {
-            report_missing_argument(cmdp, opt, false);
+            report_missing_argument(opt, false);
             return true;
         }
 
@@ -148,20 +97,19 @@ static bool parse_long_option(struct cmd_parser* cmdp, const struct cmd_option* 
         size_t option_arg_len = parser_eat_word(p);
 
         if (option_arg_len == 0) {
-            report_unexpected_character(cmdp);
+            report_unexpected_character(parser_peek(p));
             return false;
         }
 
-        cmdp->options[i] = strndup(option_arg, option_arg_len);
+        result->options[i] = strndup(option_arg, option_arg_len);
         return true;
     }
 
-    report_invalid_long_option(cmdp, option_len, option);
+    report_invalid_long_option(option_len, option);
     return false;
 }
 
-static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option* options) {
-    struct parser* p = &cmdp->p;
+static bool parse_short_options(struct cmd_parse_result* result, struct parser* p, const struct cmd_option* options) {
     // At this point, the leading - is already parsed.
     // Note: We might support multiple forms of short flags depending on the flag's type:
     // - -x arg: x with argument 'arg'
@@ -179,21 +127,21 @@ static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option
             if (opt->shorthand != option)
                 continue;
 
-            ++p->offset;
-
-            if (cmdp->options[i]) {
-                report_duplicate_option(cmdp, opt);
+            if (result->options[i]) {
+                report_duplicate_option(opt);
                 return false;
             }
 
+            ++p->offset;
+
             if (!opt->value_name) {
-                cmdp->options[i] = strdup("");
+                result->options[i] = strdup("");
                 goto next_option;
             }
 
             parser_skip_ws(p);
             if (parser_is_at_end(p)) {
-                report_missing_argument(cmdp, opt, true);
+                report_missing_argument(opt, true);
                 return false;
             }
 
@@ -202,21 +150,21 @@ static bool parse_short_options(struct cmd_parser* cmdp, const struct cmd_option
             size_t option_arg_len = parser_eat_word(p);
 
             if (option_arg_len == 0) {
-                report_unexpected_character(cmdp);
+                report_unexpected_character(parser_peek(p));
                 return false;
             }
 
-            cmdp->options[i] = strndup(option_arg, option_arg_len);
+            result->options[i] = strndup(option_arg, option_arg_len);
             return true;
         }
 
-        report_invalid_short_option(cmdp, option);
+        report_invalid_short_option(option);
         return false;
     }
 }
 
-static bool parse_leaf(struct cmd_parser* cmdp) {
-    const struct cmd* cmd = cmdp->matched_command;
+static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
+    const struct cmd* cmd = result->matched_command;
     size_t num_optionals = 0;
     {
         const struct cmd_option* opt = cmd->leaf.options;
@@ -248,10 +196,9 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
         }
     }
 
-    cmdp->options = calloc(num_optionals, sizeof(const char*));
-    cmdp->positionals = calloc(min_positionals, sizeof(const char*));
+    result->options = calloc(num_optionals, sizeof(const char*));
+    result->positionals = calloc(min_positionals, sizeof(const char*));
 
-    struct parser* p = &cmdp->p;
     while (true) {
         parser_skip_ws(p);
         if (parser_is_at_end(p)) {
@@ -262,21 +209,21 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
             const char* positional = parser_remaining(p);
             size_t positional_len = parser_eat_word(p);
             if (positional_len == 0) {
-                report_unexpected_character(cmdp);
+                report_unexpected_character(parser_peek(p));
                 return false;
             }
 
-            size_t i = cmdp->positionals_len++;
+            size_t i = result->positionals_len++;
             if (i == max_positionals && !variadic) {
-                report_superficial_positional(cmdp, positional_len, positional);
+                report_superficial_positional(positional_len, positional);
                 return false;
             }
 
-            if (cmdp->positionals_len >= min_positionals) {
+            if (result->positionals_len >= min_positionals) {
                 // TODO: More efficient realloc
-                cmdp->positionals = realloc(cmdp->positionals, cmdp->positionals_len);
+                result->positionals = realloc(result->positionals, result->positionals_len);
             }
-            cmdp->positionals[i] = strndup(positional, positional_len);
+            result->positionals[i] = strndup(positional, positional_len);
             continue;
         }
 
@@ -284,89 +231,82 @@ static bool parse_leaf(struct cmd_parser* cmdp) {
         if (parser_peek(p) == '-') {
             // Long argument
             ++p->offset;
-            if (!parse_long_option(cmdp, cmd->leaf.options))
+            if (!parse_long_option(result, p, cmd->leaf.options))
                 return false;
         } else {
             // Short argument
-            if (!parse_short_options(cmdp, cmd->leaf.options))
+            if (!parse_short_options(result, p, cmd->leaf.options))
                 return false;
         }
     }
 
-    if (cmdp->positionals_len < min_positionals) {
-        report_missing_positional(cmdp);
+    if (result->positionals_len < min_positionals) {
+        report_missing_positional(result->matched_command, result->positionals_len);
         return false;
     }
 
     return true;
 }
 
-static bool parse_cmd(struct cmd_parser* cmdp, const struct cmd* const* spec) {
-    struct parser* p = &cmdp->p;
-    parser_skip_ws(p);
-    if (parser_is_at_end(p)) {
-        // Matched no command. In this case we either match the directory or
-        // the empty input. In either case, cmdp->matched_command is already
-        // correct.
-        return true;
-    }
+static bool parse_cmd(struct cmd_parse_result* result, struct parser* p, const struct cmd* const* spec) {
+    while (true) {
+        parser_skip_ws(p);
+        if (parser_is_at_end(p)) {
+            // Matched no command. In this case we either match the directory or
+            // the empty input. In either case, result->matched_command is already
+            // correct.
+            return true;
+        }
 
-    cmdp->command_offset = p->offset;
-    const char* command = parser_remaining(p);
-    size_t command_len = parser_eat_word(p);
+        const char* command = parser_remaining(p);
+        size_t command_len = parser_eat_word(p);
 
-    if (command_len == 0) {
-        report_unexpected_character(cmdp);
-        return false;
-    } else if (is_flag(command)) {
-        report_invalid_command(cmdp);
-        return false;
-    }
+        if (command_len == 0) {
+            report_unexpected_character(parser_peek(p));
+            return false;
+        } else if (is_flag(command)) {
+            report_invalid_command(command_len, command);
+            return false;
+        }
 
-    const struct cmd* matched = cmd_match_command(spec, command_len, command);
-    if (matched) {
-        cmdp->matched_command = matched;
-        switch (matched->type) {
-            case CMD_TYPE_DIRECTORY:
-                return parse_cmd(cmdp, matched->directory.subcommands);
+        result->matched_command = cmd_match_command(spec, command_len, command);
+        if (!result->matched_command) {
+            report_invalid_command(command_len, command);
+            return false;
+        }
+
+        switch (result->matched_command->type) {
             case CMD_TYPE_LEAF:
-                return parse_leaf(cmdp);
+                return parse_leaf(result, p);
+            case CMD_TYPE_DIRECTORY:
+                spec = result->matched_command->directory.subcommands;
+                break;
         }
     }
-
-    // No commands matched.
-    report_invalid_command(cmdp);
-    return false;
 }
 
-void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* const* spec, size_t len, const char line[len]) {
-    parser_init(&cmdp->p, len, line);
-    cmdp->spec = spec;
-    cmdp->matched_command = NULL;
-    cmdp->command_offset = 0;
-    cmdp->options = NULL;
-    cmdp->positionals = NULL;
-    cmdp->positionals_len = 0;
+bool cmd_parse(struct cmd_parse_result* result, struct parser* p, const struct cmd* const* spec) {
+    result->matched_command = NULL;
+    result->options = NULL;
+    result->positionals = NULL;
+    result->positionals_len = 0;
+    return parse_cmd(result, p, spec);
 }
 
-void cmd_parser_deinit(struct cmd_parser* cmdp) {
-    if (cmdp->matched_command && cmdp->matched_command->type == CMD_TYPE_LEAF) {
-        const struct cmd_option* options = cmdp->matched_command->leaf.options;
+void cmd_parse_result_deinit(struct cmd_parse_result* result) {
+    if (result->matched_command && result->matched_command->type == CMD_TYPE_LEAF) {
+        const struct cmd_option* options = result->matched_command->leaf.options;
         for (size_t i = 0; options && cmd_option_is_valid(&options[i]); ++i) {
-            free(cmdp->options[i]);
+            free(result->options[i]);
         }
     }
 
-    for (size_t i = 0; i < cmdp->positionals_len; ++i) {
-        free(cmdp->positionals[i]);
+    for (size_t i = 0; i < result->positionals_len; ++i) {
+        free(result->positionals[i]);
     }
 
-    free(cmdp->options);
-    free(cmdp->positionals);
-}
-
-bool cmd_parse(struct cmd_parser* cmdp) {
-    return parse_cmd(cmdp, cmdp->spec);
+    free(result->options);
+    free(result->positionals);
 }
 
 const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]) {

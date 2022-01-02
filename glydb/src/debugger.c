@@ -1,5 +1,6 @@
 #include "debugger.h"
 #include "command.h"
+#include "parser.h"
 #include "commands/commands.h"
 
 #include <stdio.h>
@@ -20,14 +21,16 @@ void debugger_deinit(struct debugger* dbg) {
 }
 
 void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]) {
-    struct cmd_parser cmdp;
-    cmd_parser_init(&cmdp, commands, len, line);
+    struct parser p;
+    parser_init(&p, len, line);
 
-    if (cmd_parse(&cmdp) && cmdp.matched_command) {
-        switch (cmdp.matched_command->type) {
+    struct cmd_parse_result result;
+
+    if (cmd_parse(&result, &p, commands) && result.matched_command) {
+        switch (result.matched_command->type) {
             case CMD_TYPE_LEAF: {
-                command_handler_t handler = cmdp.matched_command->leaf.payload;
-                handler(dbg, cmdp.positionals_len, (const char* const*) cmdp.positionals);
+                command_handler_t handler = result.matched_command->leaf.payload;
+                handler(dbg, result.positionals_len, (const char* const*) result.positionals);
                 break;
             }
             case CMD_TYPE_DIRECTORY:
@@ -36,7 +39,7 @@ void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]) {
         }
     }
 
-    cmd_parser_deinit(&cmdp);
+    cmd_parse_result_deinit(&result);
 }
 
 void debugger_repl(struct debugger* dbg) {

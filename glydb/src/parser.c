@@ -1,4 +1,6 @@
 #include "parser.h"
+
+#include <stdio.h>
 #include <ctype.h>
 
 void parser_init(struct parser* p, size_t len, const char input[len]) {
@@ -46,4 +48,9 @@ size_t parser_eat_word(struct parser* p) {
         ++p->offset;
         ++len;
     }
+}
+
+void parser_dump_state(struct parser* p) {
+    printf("%.*s\n", (int) p->length, p->input);
+    printf("%*s^\n", (int) p->offset, "");
 }

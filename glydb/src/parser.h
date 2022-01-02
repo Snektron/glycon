@@ -53,4 +53,6 @@ bool parser_skip_ws(struct parser* p);
 // Match any whitespace-delimited word.
 size_t parser_eat_word(struct parser* p);
 
+void parser_dump_state(struct parser* p);
+
 #endif

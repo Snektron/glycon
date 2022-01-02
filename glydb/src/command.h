@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "parser.h"
+struct parser;
 
 struct cmd_option {
     const char* name;
@@ -50,18 +50,10 @@ struct cmd {
     };
 };
 
-struct cmd_parser {
-    struct parser p;
-    const struct cmd* const* spec;
-
+struct cmd_parse_result {
     // The most recently matched command.
     // May be empty if the input was empty, which is technically a valid command.
     const struct cmd* matched_command;
-
-    // Start offset of the most recently matched command (for error reporting).
-    // This includes invalid commands, in which case this offset will not actually
-    // correspond with that of `matched_command`.
-    size_t command_offset;
 
     // One for each of the matched command's options array.
     // For a flag without value, the option is set to "" if its present.
@@ -70,11 +62,9 @@ struct cmd_parser {
     size_t positionals_len;
 };
 
-void cmd_parser_init(struct cmd_parser* cmdp, const struct cmd* const* spec, size_t len, const char line[len]);
+bool cmd_parse(struct cmd_parse_result* result, struct parser* p, const struct cmd* const* spec);
 
-void cmd_parser_deinit(struct cmd_parser* cmdp);
-
-bool cmd_parse(struct cmd_parser* cmdp);
+void cmd_parse_result_deinit(struct cmd_parse_result* result);
 
 const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]);
 
