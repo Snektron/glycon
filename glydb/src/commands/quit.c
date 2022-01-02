@@ -1,8 +1,7 @@
 #include "commands/commands.h"
 #include "debugger.h"
 
-static void quit(struct debugger* dbg, size_t len, const char* const args[len]) {
-    (void) len;
+static void quit(struct debugger* dbg, const struct cmd_parse_result* args) {
     (void) args;
     dbg->quit = true;
 }

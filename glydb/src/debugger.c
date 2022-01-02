@@ -25,12 +25,11 @@ void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]) {
     parser_init(&p, len, line);
 
     struct cmd_parse_result result;
-
     if (cmd_parse(&result, &p, commands) && result.matched_command) {
         switch (result.matched_command->type) {
             case CMD_TYPE_LEAF: {
                 command_handler_t handler = result.matched_command->leaf.payload;
-                handler(dbg, result.positionals_len, (const char* const*) result.positionals);
+                handler(dbg, &result);
                 break;
             }
             case CMD_TYPE_DIRECTORY:

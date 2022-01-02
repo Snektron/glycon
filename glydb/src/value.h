@@ -34,6 +34,8 @@ enum value_parse_status {
 
 enum value_parse_status value_parse(union value_data* result, struct parser* p, enum value_type expected_type);
 
+void value_free(const struct value* val);
+
 const char* value_parse_status_to_str(enum value_parse_status status);
 
 #endif

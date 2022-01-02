@@ -7,17 +7,18 @@
 struct help {
     const struct cmd* const* spec;
     size_t command_len;
-    const char* const* command;
+    union value_data* command;
 };
 
 static void print_command(const struct help* h) {
     const struct cmd* cmd = NULL;
     const struct cmd* const* spec = h->spec;
     for (size_t i = 0; i < h->command_len; ++i) {
-        cmd = cmd_match_command(spec, strlen(h->command[i]), h->command[i]);
+        const char* command = h->command[i].as_str;
+        cmd = cmd_match_command(spec, strlen(command), command);
         if (!cmd) {
             // No match: just print the word
-            printf("%s%s", &" "[i == 0], h->command[i]);
+            printf("%s%s", &" "[i == 0], command);
         } else {
             // Print the full name for clarity.
             printf("%s%s", &" "[i == 0], cmd->name);
@@ -118,7 +119,8 @@ static void report_help(const struct help* h) {
     const struct cmd* cmd = NULL;
     const struct cmd* const* spec = h->spec;
     for (size_t i = 0; i < h->command_len; ++i) {
-        cmd = cmd_match_command(spec, strlen(h->command[i]), h->command[i]);
+        const char* command = h->command[i].as_str;
+        cmd = cmd_match_command(spec, strlen(command), command);
 
         if (!cmd)
             goto no_such_command;
@@ -153,9 +155,8 @@ no_such_command:
     puts("'.");
 }
 
-static void help(struct debugger* dbg, size_t len, const char* const args[len]) {
-    (void) dbg;
-    struct help h = {commands, len, args};
+static void help(struct debugger* dbg, const struct cmd_parse_result* args) {
+    struct help h = {commands, args->positionals_len, args->positionals};
     report_help(&h);
 }
 
@@ -166,7 +167,7 @@ const struct cmd command_help = {
     {.leaf = {
         .options = NULL,
         .positionals = (struct cmd_positional[]){
-            {"command", "Command to get help for.", CMD_OPTIONAL | CMD_VARIADIC},
+            {VALUE_TYPE_STR, "command", "Command to get help for.", CMD_OPTIONAL | CMD_VARIADIC},
             {}
         },
         .payload = help

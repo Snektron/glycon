@@ -8,21 +8,22 @@
 #include <ctype.h>
 
 static void report_invalid_command(size_t len, const char text[len]) {
-    printf("error: invalid command '%.*s'\n", (int) len, text);
+    printf("error: Invalid command '%.*s'.\n", (int) len, text);
 }
 
-static void report_unexpected_character(int c) {
+static void report_unexpected_character(struct parser* p) {
+    int c = parser_peek(p);
     if (c < 0) {
-        printf("error: unexpected end of command.\n");
+        printf("error: Unexpected end of command.\n");
     } else if (isprint(c)) {
-        printf("error: unexpected character %c.\n", c);
+        printf("error: Unexpected character %c.\n", c);
     } else {
-        printf("error: unexpected character \\x%02X.\n", c);
+        printf("error: Unexpected character \\x%02X.\n", c);
     }
 }
 
 static void report_missing_argument(const struct cmd_option* opt, bool shorthand) {
-    printf("error: missing argument <%s> to option ", opt->value_name);
+    printf("error: Missing argument <%s> to option ", opt->value_name);
     if (shorthand) {
         printf("-%c.\n", opt->shorthand);
     } else {
@@ -31,30 +32,43 @@ static void report_missing_argument(const struct cmd_option* opt, bool shorthand
 }
 
 static void report_invalid_long_option(size_t len, const char opt[len]) {
-    printf("error: invalid option --%.*s.\n", (int) len, opt);
+    printf("error: Invalid option --%.*s.\n", (int) len, opt);
 }
 
 static void report_invalid_short_option(char opt) {
-    printf("error: invalid option -%c.\n", opt);
+    printf("error: Invalid option -%c.\n", opt);
 }
 
-static void report_duplicate_option(const struct cmd_option* opt) {
-    printf("error: duplicate option ");
-    if (opt->shorthand && opt->name) {
-        printf("-%c/--%s.\n", opt->shorthand, opt->name);
-    } else if (opt->shorthand) {
-        printf("-%c.\n", opt->shorthand);
-    } else {
-        printf("--%s.\n", opt->name);
-    }
-}
+// static void report_duplicate_option(const struct cmd_option* opt) {
+//     printf("error: Duplicate option ");
+//     if (opt->shorthand && opt->name) {
+//         printf("-%c/--%s.\n", opt->shorthand, opt->name);
+//     } else if (opt->shorthand) {
+//         printf("-%c.\n", opt->shorthand);
+//     } else {
+//         printf("--%s.\n", opt->name);
+//     }
+// }
 
 static void report_missing_positional(const struct cmd* cmd, size_t i) {
-    printf("error: missing required positional argument <%s>.\n", cmd->leaf.positionals[i].value_name);
+    printf("error: Missing required positional argument <%s>.\n", cmd->leaf.positionals[i].value_name);
 }
 
 static void report_superficial_positional(size_t len, const char pos[len]) {
-    printf("error: superficial positional argument '%.*s'.\n", (int) len, pos);
+    printf("error: Superficial positional argument '%.*s'.\n", (int) len, pos);
+}
+
+static void report_value_parse_error(struct parser* p, enum value_parse_status status) {
+    switch (status) {
+        case VALUE_PARSE_SUCCESS:
+            assert(false);
+        case VALUE_PARSE_UNEXPECTED_END:
+        case VALUE_PARSE_UNEXPECTED_CHARACTER:
+            report_unexpected_character(p);
+            break;
+        default:
+            printf("error: %s.\n", value_parse_status_to_str(status));
+    }
 }
 
 static bool is_flag(const char text[]) {
@@ -67,7 +81,7 @@ static bool parse_long_option(struct cmd_parse_result* result, struct parser* p,
     size_t option_len = parser_eat_word(p);
     if (option_len == 0) {
         // Note: Also matches '--'.
-        report_unexpected_character(parser_peek(p));
+        report_unexpected_character(p);
         return false;
     }
 
@@ -76,13 +90,13 @@ static bool parse_long_option(struct cmd_parse_result* result, struct parser* p,
         if (strncmp(opt->name, option, option_len) != 0)
             continue;
 
-        if (result->options[i]) {
-            report_duplicate_option(opt);
-            return false;
-        }
+        // if (result->options[i]) {
+        //     report_duplicate_option(opt);
+        //     return false;
+        // }
 
         if (!opt->value_name) {
-            result->options[i] = strdup("");
+            result->options[i].as_bool = true;
             return true;
         }
 
@@ -92,16 +106,13 @@ static bool parse_long_option(struct cmd_parse_result* result, struct parser* p,
             return true;
         }
 
-        // TODO: Integrate with expression parsing.
-        const char* option_arg = parser_remaining(p);
-        size_t option_arg_len = parser_eat_word(p);
-
-        if (option_arg_len == 0) {
-            report_unexpected_character(parser_peek(p));
+        union value_data value;
+        enum value_parse_status status = value_parse(&value, p, opt->value_type);
+        if (status != VALUE_PARSE_SUCCESS) {
+            report_value_parse_error(p, status);
             return false;
         }
-
-        result->options[i] = strndup(option_arg, option_arg_len);
+        result->options[i] = value;
         return true;
     }
 
@@ -127,15 +138,15 @@ static bool parse_short_options(struct cmd_parse_result* result, struct parser* 
             if (opt->shorthand != option)
                 continue;
 
-            if (result->options[i]) {
-                report_duplicate_option(opt);
-                return false;
-            }
+            // if (result->options[i]) {
+            //     report_duplicate_option(opt);
+            //     return false;
+            // }
 
             ++p->offset;
 
             if (!opt->value_name) {
-                result->options[i] = strdup("");
+                result->options[i].as_bool = true;
                 goto next_option;
             }
 
@@ -145,16 +156,13 @@ static bool parse_short_options(struct cmd_parse_result* result, struct parser* 
                 return false;
             }
 
-            // TODO: Integrate with expression parsing.
-            const char* option_arg = parser_remaining(p);
-            size_t option_arg_len = parser_eat_word(p);
-
-            if (option_arg_len == 0) {
-                report_unexpected_character(parser_peek(p));
+            union value_data value;
+            enum value_parse_status status = value_parse(&value, p, opt->value_type);
+            if (status != VALUE_PARSE_SUCCESS) {
+                report_value_parse_error(p, status);
                 return false;
             }
-
-            result->options[i] = strndup(option_arg, option_arg_len);
+            result->options[i] = value;
             return true;
         }
 
@@ -196,6 +204,7 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
         }
     }
 
+    // Note, correctly zero-intializes options.
     result->options = calloc(num_optionals, sizeof(const char*));
     result->positionals = calloc(min_positionals, sizeof(const char*));
 
@@ -205,25 +214,34 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
             break;
         } else if (parser_peek(p) != '-') {
             // Parse a positional argument.
-            // TODO: Integrate with expression parsing.
-            const char* positional = parser_remaining(p);
-            size_t positional_len = parser_eat_word(p);
-            if (positional_len == 0) {
-                report_unexpected_character(parser_peek(p));
-                return false;
-            }
+            size_t index = result->positionals_len;
+            if (index == max_positionals && !variadic) {
+                // Attempt to parse something just for error reporting.
+                const char* positional = parser_remaining(p);
+                size_t positional_len = parser_eat_word(p);
+                if (positional_len == 0) {
+                    report_unexpected_character(p);
+                    return false;
+                }
 
-            size_t i = result->positionals_len++;
-            if (i == max_positionals && !variadic) {
                 report_superficial_positional(positional_len, positional);
                 return false;
             }
 
-            if (result->positionals_len >= min_positionals) {
+            size_t positional = index >= max_positionals ? max_positionals - 1 : index;
+            union value_data value;
+            enum value_type type = cmd->leaf.positionals[positional].value_type;
+            enum value_parse_status status = value_parse(&value, p, type);
+            if (status != VALUE_PARSE_SUCCESS) {
+                report_value_parse_error(p, status);
+                return false;
+            }
+
+            if (++result->positionals_len >= min_positionals) {
                 // TODO: More efficient realloc
                 result->positionals = realloc(result->positionals, result->positionals_len);
             }
-            result->positionals[i] = strndup(positional, positional_len);
+            result->positionals[index] = value;
             continue;
         }
 
@@ -262,7 +280,7 @@ static bool parse_cmd(struct cmd_parse_result* result, struct parser* p, const s
         size_t command_len = parser_eat_word(p);
 
         if (command_len == 0) {
-            report_unexpected_character(parser_peek(p));
+            report_unexpected_character(p);
             return false;
         } else if (is_flag(command)) {
             report_invalid_command(command_len, command);
@@ -297,13 +315,22 @@ void cmd_parse_result_deinit(struct cmd_parse_result* result) {
     if (result->matched_command && result->matched_command->type == CMD_TYPE_LEAF) {
         const struct cmd_option* options = result->matched_command->leaf.options;
         for (size_t i = 0; options && cmd_option_is_valid(&options[i]); ++i) {
-            free(result->options[i]);
+            if (options[i].value_type == VALUE_TYPE_STR) {
+                free(result->options[i].as_str);
+            }
+        }
+
+        const struct cmd_positional* pos = result->matched_command->leaf.positionals;
+        for (size_t i = 0; i < result->positionals_len; ++i) {
+            if (pos->value_type == VALUE_TYPE_STR) {
+                free(result->positionals[i].as_str);
+            }
+            if (cmd_positional_is_valid(pos + 1)) {
+                ++pos;
+            }
         }
     }
 
-    for (size_t i = 0; i < result->positionals_len; ++i) {
-        free(result->positionals[i]);
-    }
 
     free(result->options);
     free(result->positionals);

@@ -5,7 +5,7 @@
 
 struct debugger;
 
-typedef void (*command_handler_t)(struct debugger* dbg, size_t len, const char* const positionals[len]);
+typedef void (*command_handler_t)(struct debugger* dbg, const struct cmd_parse_result* args);
 
 extern const struct cmd* commands[];
 

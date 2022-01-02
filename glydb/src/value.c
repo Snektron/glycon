@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static enum value_parse_status parse_int(int64_t* result_ptr, struct parser* p) {
     // TODO: Expressions.
@@ -12,56 +13,63 @@ static enum value_parse_status parse_int(int64_t* result_ptr, struct parser* p) 
         return VALUE_PARSE_UNEXPECTED_END;
     }
 
-    const char* value = parser_remaining(p);
-    size_t len = parser_eat_word(p);
-    if (len == 0) {
-        return VALUE_PARSE_UNEXPECTED_CHARACTER;
-    }
-
     bool negate = false;
-    if (value[0] == '-') {
+    if (parser_peek(p) == '-') {
         negate = true;
-        --len;
-        ++value;
+        ++p->offset;
     }
 
-    int base = 10;
-    if (len >= 2 && value[0] == '0') {
-        switch (value[1]) {
+    uint64_t base = 10;
+    if (parser_peek(p) == '0') {
+        // This character won't have effect on the final value even if its not part
+        // of a radix prefix, so we can safely ignore it.
+        ++p->offset;
+        switch (parser_peek(p)) {
             case 'x':
                 base = 16;
+                ++p->offset;
                 break;
             case 'o':
                 base = 8;
+                ++p->offset;
                 break;
             case 'b':
                 base = 2;
+                ++p->offset;
                 break;
             default:
-                break;
-        }
-        switch (value[1]) {
-            case 'x':
-            case 'o':
-            case 'b':
-                len -= 2;
-                value += 2;
-                break;
-            default:
+                --p->offset;
                 break;
         }
     }
 
+    if (parser_test_ws_or_end(p))
+        return VALUE_PARSE_UNEXPECTED_CHARACTER;
+
     uint64_t max = -(uint64_t) INT64_MIN;
     uint64_t result = 0;
-    for (size_t i = 0; i < len; ++i) {
-        if (10 > max / result)
+    while (!parser_test_ws_or_end(p)) {
+        int c = parser_peek(p);
+        uint64_t digit;
+        if (c >= '0' && c <= '9') {
+            digit = c - '0';
+        } else if (c >= 'A' && c <= 'Z') {
+            digit = c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'z') {
+            digit = c - 'a' + 10;
+        } else {
+            return VALUE_PARSE_UNEXPECTED_CHARACTER;
+        }
+
+        if (digit >= base)
+            return VALUE_PARSE_UNEXPECTED_CHARACTER;
+        if (result != 0 && base > max / result)
             return VALUE_PARSE_INTEGER_OUT_OF_RANGE;
-        result *= 10;
-        uint64_t digit = value[i] - '0';
+        result *= base;
         if (digit > max - result)
             return VALUE_PARSE_INTEGER_OUT_OF_RANGE;
         result += digit;
+        ++p->offset;
     }
 
     if (negate) {
@@ -98,10 +106,11 @@ static enum value_parse_status parse_str(char** result_ptr, struct parser* p) {
         ++len;
     }
 
-    char* result = malloc(len);
-    for (size_t i = 0, j = 0; i < len; ++i) {
+    char* result = malloc(len + 1);
+    for (size_t i = 0, j = 0; i < len; ++i, ++j) {
         result[i] = str[str[j] == '\\' ? ++j : j];
     }
+    result[len] = 0;
 
     *result_ptr = result;
     return VALUE_PARSE_SUCCESS;
@@ -140,6 +149,12 @@ enum value_parse_status value_parse(union value_data* result, struct parser* p, 
             return parse_str(&result->as_str, p);
         case VALUE_TYPE_BOOL:
             return parse_bool(&result->as_bool, p);
+    }
+}
+
+void value_free(const struct value* val) {
+    if (val->type == VALUE_TYPE_STR) {
+        free(val->data.as_str);
     }
 }
 

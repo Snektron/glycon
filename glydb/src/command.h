@@ -1,6 +1,8 @@
 #ifndef _GLYDB_COMMAND_H
 #define _GLYDB_COMMAND_H
 
+#include "value.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -9,8 +11,9 @@ struct parser;
 struct cmd_option {
     const char* name;
     char shorthand;
+    enum value_type value_type;
+    const char* value_name;
     const char* help;
-    const char* value_name; // If NULL takes no value
 };
 
 enum cmd_flag {
@@ -19,6 +22,7 @@ enum cmd_flag {
 };
 
 struct cmd_positional {
+    enum value_type value_type;
     const char* value_name;
     const char* help;
     enum cmd_flag flags;
@@ -56,9 +60,8 @@ struct cmd_parse_result {
     const struct cmd* matched_command;
 
     // One for each of the matched command's options array.
-    // For a flag without value, the option is set to "" if its present.
-    char** options;
-    char** positionals;
+    union value_data* options;
+    union value_data* positionals;
     size_t positionals_len;
 };
 

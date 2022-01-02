@@ -8,9 +8,7 @@
 #include <errno.h>
 #include <string.h>
 
-static void ping(struct debugger* dbg, size_t len, const char* const args[len]) {
-    (void) len;
-    (void) args;
+static void ping(struct debugger* dbg, const struct cmd_parse_result* args) {
     if (debugger_require_connection(dbg))
         return;
 
