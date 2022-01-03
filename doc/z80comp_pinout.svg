@@ -28,9 +28,9 @@
      showgrid="false"
      inkscape:snap-grids="true"
      inkscape:snap-to-guides="true"
-     inkscape:zoom="0.7071068"
-     inkscape:cx="294.86352"
-     inkscape:cy="289.91377"
+     inkscape:zoom="5.6568544"
+     inkscape:cx="722.92828"
+     inkscape:cy="407.82383"
      inkscape:window-width="1920"
      inkscape:window-height="1023"
      inkscape:window-x="0"
@@ -1841,36 +1841,36 @@
     <text
        xml:space="preserve"
        style="font-size:4.93889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#aa8800;stroke-width:0.333917"
-       x="187.78598"
-       y="103.67352"
+       x="187.91498"
+       y="102.20045"
        id="text9479-1-3"
        transform="scale(0.99428228,1.0057506)"><tspan
          sodipodi:role="line"
          style="font-size:4.93889px;fill:#aa8800;stroke-width:0.333917"
-         x="187.78598"
-         y="105.47738"
+         x="187.91498"
+         y="104.0043"
          id="tspan10431-89-6">RAM WE</tspan><tspan
          sodipodi:role="line"
          style="font-size:4.93889px;fill:#aa8800;stroke-width:0.333917"
-         x="187.78598"
-         y="111.65099"
+         x="187.91498"
+         y="110.17791"
          id="tspan11805-6-7" /></text>
     <text
        xml:space="preserve"
        style="font-size:4.93889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#aa8800;stroke-width:0.333917"
-       x="88.772621"
-       y="104.66362"
+       x="88.776115"
+       y="103.21107"
        id="text9479-1-3-5"
        transform="scale(0.99428228,1.0057506)"><tspan
          sodipodi:role="line"
          style="font-size:4.93889px;fill:#aa8800;stroke-width:0.333917"
-         x="88.772621"
-         y="106.46748"
+         x="88.776115"
+         y="105.01492"
          id="tspan10431-89-6-3">RAM WE</tspan><tspan
          sodipodi:role="line"
          style="font-size:4.93889px;fill:#aa8800;stroke-width:0.333917"
-         x="88.772621"
-         y="112.64108"
+         x="88.776115"
+         y="111.18853"
          id="tspan11805-6-7-5" /></text>
     <text
        xml:space="preserve"
@@ -2173,7 +2173,7 @@
        style="font-size:21.3333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect317497)"><tspan
          x="123.11133"
          y="107.51169"
-         id="tspan8259">Arduino Mega
+         id="tspan1547">Arduino Mega
 </tspan></text>
     <text
        xml:space="preserve"
@@ -2182,7 +2182,7 @@
        style="font-size:21.3333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect325707)"><tspan
          x="704.87695"
          y="111.2988"
-         id="tspan8261">Z80 board
+         id="tspan1549">Z80 board
 </tspan></text>
   </g>
 </svg>
