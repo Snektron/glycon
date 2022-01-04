@@ -25,6 +25,10 @@
 #define PINOUT_FLASH_WE_PORT PORTG
 #define PINOUT_FLASH_WE_MASK (1 << PG0)
 
+#define PINOUT_RAM_WE_DDR DDRG
+#define PINOUT_RAM_WE_PORT PORTG
+#define PINOUT_RAM_WE_MASK (1 << PG2)
+
 enum pin_direction {
     PIN_INPUT = 0,
     PIN_OUTPUT = 1

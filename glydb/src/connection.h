@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 struct connection {
     char* port;
@@ -31,5 +32,7 @@ int conn_write_byte(struct connection* conn, uint8_t byte);
 
 // Returns -1 on error.
 int conn_read_byte(struct connection* conn);
+
+int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]);
 
 #endif

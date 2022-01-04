@@ -101,3 +101,13 @@ int conn_read_byte(struct connection* conn) {
         return byte;
     }
 }
+
+int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]) {
+    for (size_t i = 0; i < len; ++i) {
+        if (conn_write_byte(conn, data[i]) < 0) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
