@@ -23,7 +23,7 @@ void bdbp_pkt_append_data(uint8_t* pkt, size_t len, const void* data) {
     size_t current_len = pkt[BDBP_FIELD_DATA_LEN];
     assert(current_len + len <= BDBP_MAX_DATA_LENGTH);
     pkt[BDBP_FIELD_DATA_LEN] = current_len + len;
-    memcpy(&pkt[current_len], data, len);
+    memcpy(&pkt[BDBP_FIELD_DATA + current_len], data, len);
 }
 
 void bdbp_pkt_append_u8(uint8_t* pkt, uint8_t data) {

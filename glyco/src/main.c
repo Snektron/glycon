@@ -13,7 +13,7 @@ void cmd_write(uint8_t data_len) {
     uint8_t address_hi = serial_poll_byte();
     uint8_t address_lo = serial_poll_byte();
     uint8_t data = serial_poll_byte();
-    uint8_t address = address_hi << 8 | address_lo;
+    uint16_t address = (address_hi << 8) | address_lo;
 
     pinout_set_data_ddr(PIN_OUTPUT);
     pinout_write_addr(address);
@@ -24,6 +24,7 @@ void cmd_write(uint8_t data_len) {
     PINOUT_RAM_WE_PORT |= PINOUT_RAM_WE_MASK;
     _delay_us(1);
     pinout_set_data_ddr(PIN_INPUT);
+    pinout_write_data(0);
     data = pinout_read_data();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
@@ -35,7 +36,7 @@ void cmd_read(uint8_t data_len) {
     uint8_t address_lo = serial_poll_byte();
     uint8_t amt = serial_poll_byte();
     (void) amt;
-    uint8_t address = address_hi << 8 | address_lo;
+    uint16_t address = (address_hi << 8) | address_lo;
     pinout_write_addr(address);
     _delay_us(1);
     uint8_t data = pinout_read_data();

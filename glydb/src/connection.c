@@ -61,6 +61,9 @@ bool conn_open_serial(struct connection* conn, const char* path) {
         return false;
     }
 
+    // Wait until the arduino has started
+    sleep(1);
+
     conn->fd = fd;
     conn->port = strdup(path);
     return true;

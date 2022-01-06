@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void connection_open(struct debugger* dbg, const struct cmd_parse_result* args) {
-    const char* path = args->positionals[0].as_str;
+    const char* path = args->positionals_len == 0 ? "/dev/ttyUSB0" : args->positionals[0].as_str;
     if (conn_is_open(&dbg->conn)) {
         puts("error: A connection is already open. Close it first with `connection close`.");
     } else if (!conn_open_serial(&dbg->conn, path)) {
@@ -33,7 +33,7 @@ static const struct cmd* connection_commands[] = {
     &(struct cmd){CMD_TYPE_LEAF, "open", "Open a new connection.", {.leaf = {
         .options = NULL, // TODO: Serial port options?
         .positionals = (struct cmd_positional[]){
-            {VALUE_TYPE_STR, "port", "The serial port to connect to."},
+            {VALUE_TYPE_STR, "port", "The serial port to connect to (default: /dev/ttyUSB0).", CMD_OPTIONAL},
             {}
         },
         .payload = connection_open

@@ -93,10 +93,8 @@ void serial_write_byte(uint8_t value) {
 ISR(USART0_RX_vect) {
     uint8_t data = UDR0;
 
-    // If full, discard the oldest character
-    if (ring_buffer_is_full(&rx_buffer)) {
-        ++rx_buffer.read;
+    // If full, skip
+    if (!ring_buffer_is_full(&rx_buffer)) {
+        ring_buffer_write(&rx_buffer, data);
     }
-
-    ring_buffer_write(&rx_buffer, data);
 }

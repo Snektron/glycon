@@ -26,6 +26,7 @@ enum bdbp_cmd {
     // and the number of bytes to read.
     // | 0x03 | 0x03 | ADDR (2 byte) | AMT (1 byte) |
     // Successfull response carries the bytes from the requested memory location.
+    // | 0x01 | var | DATA (var bytes) |
     BDBP_CMD_READ = 0x03
 };
 
@@ -42,7 +43,7 @@ enum bdbp_status {
 // Definitions for offsets of packet fields.
 #define BDBP_FIELD_HDR (0)
 #define BDBP_FIELD_DATA_LEN (1)
-#define BDBN_FIELD_DATA (2)
+#define BDBP_FIELD_DATA (2)
 
 // Data field is 1 byte.
 #define BDBP_MAX_DATA_LENGTH (255)

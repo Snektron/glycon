@@ -72,7 +72,7 @@ bool debugger_exec_cmd(struct debugger* dbg, uint8_t* buf) {
     if (debugger_require_connection(dbg))
         return true;
 
-    size_t len = 2 + buf[BDBP_FIELD_DATA_LEN];
+    size_t len = BDBP_MIN_MSG_LENGTH + buf[BDBP_FIELD_DATA_LEN];
 
     int result = conn_write_all(&dbg->conn, len, buf);
     if (result < 0) {
@@ -101,7 +101,7 @@ bool debugger_exec_cmd(struct debugger* dbg, uint8_t* buf) {
     }
 
     len = result;
-    for (size_t i = 0; i < len; ++len) {
+    for (size_t i = 0; i < len; ++i) {
         result = conn_read_byte(&dbg->conn);
         // TODO: Remove this code duplication also
         if (result < 0) {
