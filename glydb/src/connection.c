@@ -111,3 +111,18 @@ int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len])
 
     return 0;
 }
+
+// int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]) {
+//     size_t offset = 0;
+//     while (offset < len) {
+//         ssize_t written = write(conn->fd, &data[offset], len - offset);
+//         if (written < 0) {
+//             return -1;
+//         } else if (written == 0) {
+//             errno = ETIMEDOUT;
+//             return -1;
+//         }
+//     }
+
+//     return 0;
+// }

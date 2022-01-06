@@ -23,6 +23,8 @@ void serial_poll_for_data();
 // If no data is available, returns -1.
 int serial_read_byte();
 
+int serial_poll_byte();
+
 // Write one byte to serial. Blocks until the byte is written.
 void serial_write_byte(uint8_t value);
 

@@ -80,6 +80,11 @@ int serial_read_byte() {
     return ring_buffer_read(&rx_buffer);
 }
 
+int serial_poll_byte() {
+    serial_poll_for_data();
+    return ring_buffer_read(&rx_buffer);
+}
+
 void serial_write_byte(uint8_t value) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = value;

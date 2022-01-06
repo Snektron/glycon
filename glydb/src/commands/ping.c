@@ -12,18 +12,11 @@ static void ping(struct debugger* dbg, const struct cmd_parse_result* args) {
     if (debugger_require_connection(dbg))
         return;
 
-    int result = conn_write_byte(&dbg->conn, BDBP_CMD_PING);
-    if (result < 0) {
-        printf("write error: %s.\n", strerror(errno));
+    uint8_t buf[2];
+    bdbp_pkt_init(buf, BDBP_CMD_PING);
+    if (debugger_exec_cmd(dbg, buf))
         return;
-    }
-
-    result = conn_read_byte(&dbg->conn);
-    if (result < 0) {
-        printf("read error: %s.\n", strerror(errno));
-    } else {
-        printf("device returned: %s.\n", bdbp_status_to_string((enum bdbp_status) result));
-    }
+    puts("pong!");
 }
 
 const struct cmd command_ping = {

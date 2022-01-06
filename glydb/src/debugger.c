@@ -1,11 +1,14 @@
 #include "debugger.h"
 #include "command.h"
 #include "parser.h"
+#include "bdbp_util.h"
 #include "commands/commands.h"
+#include "bdbp/binary_debug_protocol.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <editline.h>
 
@@ -60,6 +63,52 @@ bool debugger_require_connection(struct debugger* dbg) {
     if (!conn_is_open(&dbg->conn)) {
         printf("error: No active connection. Connect to a device using `connection open`.\n");
         return true;
+    }
+
+    return false;
+}
+
+bool debugger_exec_cmd(struct debugger* dbg, uint8_t* buf) {
+    if (debugger_require_connection(dbg))
+        return true;
+
+    size_t len = 2 + buf[BDBP_FIELD_DATA_LEN];
+
+    int result = conn_write_all(&dbg->conn, len, buf);
+    if (result < 0) {
+        printf("write error: %s.\n", strerror(errno));
+        return true;
+    }
+
+    // TODO: Improve this to ideally a single read call
+    result = conn_read_byte(&dbg->conn);
+    if (result < 0) {
+        printf("read error A: %s.\n", strerror(errno));
+        return true;
+    }
+
+    enum bdbp_status status = result;
+    if (status != BDBP_STATUS_SUCCESS) {
+        printf("device error: %s.\n", bdbp_status_to_string(status));
+        return true;
+    }
+
+    result = conn_read_byte(&dbg->conn);
+    // TODO: Remove this code duplication also
+    if (result < 0) {
+        printf("read error B: %s.\n", strerror(errno));
+        return true;
+    }
+
+    len = result;
+    for (size_t i = 0; i < len; ++len) {
+        result = conn_read_byte(&dbg->conn);
+        // TODO: Remove this code duplication also
+        if (result < 0) {
+            printf("read error C: %s.\n", strerror(errno));
+            return true;
+        }
+        buf[i] = result;
     }
 
     return false;

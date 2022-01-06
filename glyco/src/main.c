@@ -4,17 +4,15 @@
 #include "bdbp/binary_debug_protocol.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
 void cmd_write(void) {
-    serial_poll_for_data();
-    uint8_t address_hi = serial_read_byte();
-    serial_poll_for_data();
-    uint8_t address_lo = serial_read_byte();
-    serial_poll_for_data();
-    uint8_t data = serial_read_byte();
+    uint8_t address_hi = serial_poll_byte();
+    uint8_t address_lo = serial_poll_byte();
+    uint8_t data = serial_poll_byte();
     uint8_t address = address_hi << 8 | address_lo;
 
     pinout_set_data_ddr(PIN_OUTPUT);
@@ -33,10 +31,8 @@ void cmd_write(void) {
 }
 
 void cmd_read(void) {
-    serial_poll_for_data();
-    uint8_t address_hi = serial_read_byte();
-    serial_poll_for_data();
-    uint8_t address_lo = serial_read_byte();
+    uint8_t address_hi = serial_poll_byte();
+    uint8_t address_lo = serial_poll_byte();
     uint8_t address = address_hi << 8 | address_lo;
 
     pinout_write_addr(address);
@@ -62,18 +58,26 @@ int main(void) {
         serial_wait_for_data();
         PINOUT_LED_PORT ^= PINOUT_LED_MASK;
         uint8_t cmd = serial_read_byte();
+        uint8_t data_len = serial_poll_byte();
         switch (cmd) {
             case BDBP_CMD_PING:
                 serial_write_byte(BDBP_STATUS_SUCCESS);
+                serial_write_byte(0);
                 break;
-            case BDBP_CMD_WRITE:
-                cmd_write();
-                break;
-            case BDBP_CMD_READ:
-                cmd_read();
-                break;
+            // TODO: Fix these commands
+            // case BDBP_CMD_WRITE:
+            //     cmd_write();
+            //     break;
+            // case BDBP_CMD_READ:
+            //     cmd_read();
+            //     break;
             default:
+                // Delete any data bytes that follow
+                for (size_t i = 0; i < data_len; ++i) {
+                    serial_poll_byte();
+                }
                 serial_write_byte(BDBP_STATUS_UNKNOWN_CMD);
+                serial_write_byte(0);
                 break;
         }
     }
