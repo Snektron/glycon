@@ -9,10 +9,7 @@
 #include <string.h>
 
 static void ping(struct debugger* dbg, const struct cmd_parse_result* args) {
-    if (debugger_require_connection(dbg))
-        return;
-
-    uint8_t buf[2];
+    uint8_t buf[BDBP_MAX_MSG_LENGTH];
     bdbp_pkt_init(buf, BDBP_CMD_PING);
     if (debugger_exec_cmd(dbg, buf))
         return;

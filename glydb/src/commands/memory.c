@@ -9,62 +9,27 @@
 #include <string.h>
 
 static void memory_write(struct debugger* dbg, const struct cmd_parse_result* args) {
-    if (debugger_require_connection(dbg))
-        return;
-
     uint16_t address = args->positionals[0].as_int;
     uint8_t data = args->positionals[1].as_int;
-    uint8_t packet[] = {
-        BDBP_CMD_WRITE,
-        address >> 8,
-        address & 0xFF,
-        data
-    };
 
-    int result = conn_write_all(&dbg->conn, 4, packet);
-    if (result < 0) {
-        printf("write error: %s.\n", strerror(errno));
-        return;
-    }
-
-    result = conn_read_byte(&dbg->conn);
-    if (result < 0) {
-        printf("read error: %s.\n", strerror(errno));
-    } else {
-        printf("device returned: %s.\n", bdbp_status_to_string((enum bdbp_status) result));
-    }
+    uint8_t buf[BDBP_MAX_MSG_LENGTH];
+    bdbp_pkt_init(buf, BDBP_CMD_WRITE);
+    bdbp_pkt_append_u16(buf, address);
+    bdbp_pkt_append_u8(buf, data);
+    debugger_exec_cmd(dbg, buf);
 }
 
 static void memory_read(struct debugger* dbg, const struct cmd_parse_result* args) {
-    if (debugger_require_connection(dbg))
-        return;
-
     uint16_t address = args->positionals[0].as_int;
-    uint8_t packet[] = {
-        BDBP_CMD_READ,
-        address >> 8,
-        address & 0xFF,
-    };
 
-    int result = conn_write_all(&dbg->conn, 3, packet);
-    if (result < 0) {
-        printf("write error: %s.\n", strerror(errno));
-        return;
-    }
+    uint8_t buf[BDBP_MAX_MSG_LENGTH];
+    bdbp_pkt_init(buf, BDBP_CMD_READ);
+    bdbp_pkt_append_u16(buf, address);
+    bdbp_pkt_append_u8(buf, 1);
+    if (debugger_exec_cmd(dbg, buf))
+       return;
 
-    result = conn_read_byte(&dbg->conn);
-    if (result < 0) {
-        printf("read error: %s.\n", strerror(errno));
-    } else {
-        printf("device returned: %s.\n", bdbp_status_to_string((enum bdbp_status) result));
-    }
-
-    result = conn_read_byte(&dbg->conn);
-    if (result < 0) {
-        printf("read error: %s.\n", strerror(errno));
-    } else {
-        printf("data: %d.\n", result);
-    }
+    printf("%d 0x%02X\n", buf[0], buf[0]);
 }
 
 static const struct cmd* memory_commands[] = {

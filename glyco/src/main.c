@@ -9,7 +9,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-void cmd_write(void) {
+void cmd_write(uint8_t data_len) {
     uint8_t address_hi = serial_poll_byte();
     uint8_t address_lo = serial_poll_byte();
     uint8_t data = serial_poll_byte();
@@ -27,19 +27,21 @@ void cmd_write(void) {
     data = pinout_read_data();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(data);
+    serial_write_byte(0);
 }
 
-void cmd_read(void) {
+void cmd_read(uint8_t data_len) {
     uint8_t address_hi = serial_poll_byte();
     uint8_t address_lo = serial_poll_byte();
+    uint8_t amt = serial_poll_byte();
+    (void) amt;
     uint8_t address = address_hi << 8 | address_lo;
-
     pinout_write_addr(address);
     _delay_us(1);
     uint8_t data = pinout_read_data();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
+    serial_write_byte(1);
     serial_write_byte(data);
 }
 
@@ -64,13 +66,12 @@ int main(void) {
                 serial_write_byte(BDBP_STATUS_SUCCESS);
                 serial_write_byte(0);
                 break;
-            // TODO: Fix these commands
-            // case BDBP_CMD_WRITE:
-            //     cmd_write();
-            //     break;
-            // case BDBP_CMD_READ:
-            //     cmd_read();
-            //     break;
+            case BDBP_CMD_WRITE:
+                cmd_write(data_len);
+                break;
+            case BDBP_CMD_READ:
+                cmd_read(data_len);
+                break;
             default:
                 // Delete any data bytes that follow
                 for (size_t i = 0; i < data_len; ++i) {

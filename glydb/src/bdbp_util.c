@@ -26,3 +26,11 @@ void bdbp_pkt_append_data(uint8_t* pkt, size_t len, const void* data) {
     memcpy(&pkt[current_len], data, len);
 }
 
+void bdbp_pkt_append_u8(uint8_t* pkt, uint8_t data) {
+    bdbp_pkt_append_data(pkt, sizeof(uint8_t), &data);
+}
+
+void bdbp_pkt_append_u16(uint8_t* pkt, uint16_t data) {
+    bdbp_pkt_append_u8(pkt, data >> 8);
+    bdbp_pkt_append_u8(pkt, data & 0xFF);
+}

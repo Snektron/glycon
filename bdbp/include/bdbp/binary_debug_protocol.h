@@ -3,7 +3,7 @@
 
 // General message format:
 //
-// | header (1 byte) | data length (1 byte) | data ('data length' bytes) |
+// | HDR (1 byte) | DLEN (1 byte) | DATA ('DLEN' bytes) |
 //
 // For packets going to the coprocessor (requests), the header consists of a command.
 // For packets sent back by the coprocessor (responses), the header consists of a status.
@@ -18,11 +18,13 @@ enum bdbp_cmd {
 
     // Write to target memory. Data field consists of 2 + variable bytes: the address, and the data
     // to write.
+    // | 0x02 | 0x02 + var | ADDR (2 byte) | DATA (DLEN - 2 bytes) |
     // Successful response has no data.
     BDBP_CMD_WRITE = 0x02,
 
     // Read from target memory. Data field consists of 3 bytes: the address to start reading from,
     // and the number of bytes to read.
+    // | 0x03 | 0x03 | ADDR (2 byte) | AMT (1 byte) |
     // Successfull response carries the bytes from the requested memory location.
     BDBP_CMD_READ = 0x03
 };
@@ -45,7 +47,9 @@ enum bdbp_status {
 // Data field is 1 byte.
 #define BDBP_MAX_DATA_LENGTH (255)
 
+// The size of a packet with just the mandatory fields.
+#define BDBP_MIN_MSG_LENGTH (2)
 // 2 bytes for the header and data length, MAX_DATA_LENGTH bytes for the data itself.
-#define BDBP_MAX_MSG_LENGTH (2 + BDBP_MAX_DATA_LENGTH)
+#define BDBP_MAX_MSG_LENGTH (BDBP_MIN_MSG_LENGTH + BDBP_MAX_DATA_LENGTH)
 
 #endif
