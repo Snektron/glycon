@@ -39,26 +39,39 @@ enum pin_direction {
 
 // Set the direction of the data pins.
 // 0 means input, 1 is output.
-void pinout_set_data_ddr(enum pin_direction direction);
+inline void pinout_set_data_ddr(enum pin_direction direction) {
+    PINOUT_DATA_DDR = -(int) direction;
+}
 
 // Set the direction of the address pins.
 // 0 means input, 1 is output.
-void pinout_set_addr_ddr(enum pin_direction direction);
+inline void pinout_set_addr_ddr(enum pin_direction direction) {
+    PINOUT_ADDR_HI_DDR = -(int) direction;
+    PINOUT_ADDR_LO_DDR = -(int) direction;
+}
 
 // Write a value to the data bus.
 // Requires that the data bus DDR is set to output.
-void pinout_write_data(uint8_t data);
+inline void pinout_write_data(uint8_t data) {
+    PINOUT_DATA_PORT = data;
+}
 
 // Read a value from the data bus.
 // Requires that the data bus DDR is set to input.
-uint8_t pinout_read_data(void);
+inline uint8_t pinout_read_data(void) {
+    return PINOUT_DATA_PIN;
+}
 
 // Write a value to the address bus.
 // Requires that the address bus DDR is set to output.
-void pinout_write_addr(uint16_t addr);
+inline void pinout_write_addr(uint16_t addr) {
+    PINOUT_ADDR_HI_PORT = addr >> 8;
+    PINOUT_ADDR_LO_PORT = addr & 0xFF;
+}
 
 // Read a value from the address bus.
 // Requires that the address bus DDR is set to input.
-uint16_t pinout_read_addr(void);
-
+inline uint16_t pinout_read_addr(void) {
+    return (PINOUT_ADDR_HI_PIN << 8) | PINOUT_ADDR_LO_PIN;
+}
 #endif
