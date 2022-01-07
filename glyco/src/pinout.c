@@ -14,7 +14,7 @@ void pinout_write_data(uint8_t data) {
 }
 
 uint8_t pinout_read_data(void) {
-    return PINOUT_DATA_PORT;
+    return PINOUT_DATA_PIN;
 }
 
 void pinout_write_addr(uint16_t addr) {
@@ -23,5 +23,5 @@ void pinout_write_addr(uint16_t addr) {
 }
 
 uint16_t pinout_read_addr(void) {
-    return (PINOUT_ADDR_HI_PORT << 8) | PINOUT_ADDR_LO_PORT;
+    return (PINOUT_ADDR_HI_PIN << 8) | PINOUT_ADDR_LO_PIN;
 }
