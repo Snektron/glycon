@@ -27,7 +27,18 @@ enum bdbp_cmd {
     // | 0x03 | 0x03 | ADDR (2 byte) | AMT (1 byte) |
     // Successfull response carries the bytes from the requested memory location.
     // | 0x01 | var | DATA (var bytes) |
-    BDBP_CMD_READ = 0x03
+    BDBP_CMD_READ = 0x03,
+
+    // Write to target flash. Data consists of 2 + variable bytes: the address, and the data to write.
+    // | 0x04 | 0x02 + var | ADDR (2 byte) | DATA (DLEN - 2 bytes) |
+    // Successful response has no data.
+    BDBP_CMD_WRITE_FLASH = 0x04,
+
+    // Retrieve the flash software ID of the target. Takes no data.
+    // | 0x05 | 0x00 |
+    // Successfull response carries the manufacterer ID and device ID of the flash chip.
+    // | 0x01 | 0x02 | MFG ID (1 byte) | DEV ID (1 byte) |
+    BDBP_CMD_FLASH_ID = 0x05,
 };
 
 enum bdbp_status {

@@ -32,6 +32,10 @@
 #define PINOUT_RAM_WE_PORT PORTG
 #define PINOUT_RAM_WE_MASK (1 << PG2)
 
+#define PINOUT_MEM_OE_DDR DDRG
+#define PINOUT_MEM_OE_PORT PORTG
+#define PINOUT_MEM_OE_MASK (1 << PG1)
+
 enum pin_direction {
     PIN_INPUT = 0,
     PIN_OUTPUT = 1
