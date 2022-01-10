@@ -14,5 +14,6 @@ extern const struct cmd command_quit;
 extern const struct cmd command_memory;
 extern const struct cmd command_connection;
 extern const struct cmd command_ping;
+extern const struct cmd command_flash;
 
 #endif
