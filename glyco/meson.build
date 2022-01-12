@@ -1,6 +1,7 @@
 sources = [
     'src/main.c',
     'src/serial.c',
+    'src/flash.c',
 ]
 
 glyco_elf = executable(

@@ -1,5 +1,5 @@
-#ifndef _GLYCON_COPROCESSOR_SERIAL_H
-#define _GLYCON_COPROCESSOR_SERIAL_H
+#ifndef _GLYCO_SERIAL_H
+#define _GLYCO_SERIAL_H
 
 #include <stdint.h>
 #include <stdbool.h>

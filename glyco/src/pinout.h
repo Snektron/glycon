@@ -1,5 +1,5 @@
-#ifndef _GLYCON_COPROCESSOR_PINOUT_H
-#define _GLYCON_COPROCESSOR_PINOUT_H
+#ifndef _GLYCO_PINOUT_H
+#define _GLYCO_PINOUT_H
 
 #include <avr/io.h>
 
@@ -78,4 +78,16 @@ inline void pinout_write_addr(uint16_t addr) {
 inline uint16_t pinout_read_addr(void) {
     return (PINOUT_ADDR_HI_PIN << 8) | PINOUT_ADDR_LO_PIN;
 }
+
+// Enable or disable output from both the ram and flash chip.
+// When disabled, this pulls the MEM_OE pin HIGH.
+// Requires that MEM_OE DDR is set to output.
+inline void pinout_enable_mem_output(bool enable) {
+    if (enable) {
+        PINOUT_MEM_OE_PORT &= ~PINOUT_MEM_OE_MASK;
+    } else {
+        PINOUT_MEM_OE_PORT |= PINOUT_MEM_OE_MASK;
+    }
+}
+
 #endif

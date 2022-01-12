@@ -22,12 +22,12 @@ static void flash_id(struct debugger* dbg, const struct cmd_parse_result* args) 
     if (debugger_exec_cmd(dbg, buf))
        return;
 
-    printf("Manufacterer ID: %02X\n", buf[0]);
-    printf("Device ID: %02X\n", buf[1]);
+    printf("Manufacterer ID: %02X (%s)\n", buf[0], buf[0] == 0xBF ? "ok" : "incorrect");
+    printf("Device ID: %02X (%s)\n", buf[1], buf[1] == 0xB5 ? "ok" : "incorrect");
 }
 
 static const struct cmd* flash_commands[] = {
-    &(struct cmd){CMD_TYPE_LEAF, "flash", "Write to target flash.", {.leaf = {
+    &(struct cmd){CMD_TYPE_LEAF, "write", "Write to target flash.", {.leaf = {
         .options = NULL,
         .positionals = (struct cmd_positional[]){
             {VALUE_TYPE_INT, "address", "The address to write to."},
