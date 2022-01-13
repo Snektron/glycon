@@ -19,6 +19,14 @@ void bdbp_pkt_init(uint8_t* pkt, enum bdbp_cmd cmd) {
     pkt[BDBP_FIELD_DATA_LEN] = 0;
 }
 
+uint8_t bdbp_pkt_data_size(const uint8_t* pkt) {
+    return pkt[BDBP_FIELD_DATA_LEN];
+}
+
+uint8_t bdbp_pkt_data_free(const uint8_t* pkt) {
+    return BDBP_MAX_DATA_LENGTH - bdbp_pkt_data_size(pkt);
+}
+
 void bdbp_pkt_append_data(uint8_t* pkt, size_t len, const void* data) {
     size_t current_len = pkt[BDBP_FIELD_DATA_LEN];
     assert(current_len + len <= BDBP_MAX_DATA_LENGTH);

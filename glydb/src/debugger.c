@@ -92,6 +92,7 @@ bool debugger_exec_cmd(struct debugger* dbg, uint8_t* buf) {
         printf("device error: %s.\n", bdbp_status_to_string(status));
         return true;
     }
+    buf[0] = result;
 
     result = conn_read_byte(&dbg->conn);
     // TODO: Remove this code duplication also
@@ -99,6 +100,7 @@ bool debugger_exec_cmd(struct debugger* dbg, uint8_t* buf) {
         printf("read error B: %s.\n", strerror(errno));
         return true;
     }
+    buf[1] = result;
 
     len = result;
     for (size_t i = 0; i < len; ++i) {
@@ -108,7 +110,7 @@ bool debugger_exec_cmd(struct debugger* dbg, uint8_t* buf) {
             printf("read error C: %s.\n", strerror(errno));
             return true;
         }
-        buf[i] = result;
+        buf[i + 2] = result;
     }
 
     return false;

@@ -22,8 +22,11 @@ static void flash_id(struct debugger* dbg, const struct cmd_parse_result* args) 
     if (debugger_exec_cmd(dbg, buf))
        return;
 
-    printf("Manufacterer ID: %02X (%s)\n", buf[0], buf[0] == 0xBF ? "ok" : "incorrect");
-    printf("Device ID: %02X (%s)\n", buf[1], buf[1] == 0xB5 ? "ok" : "incorrect");
+    uint8_t mfg = buf[BDBP_FIELD_DATA + 0];
+    uint8_t dev = buf[BDBP_FIELD_DATA + 1];
+
+    printf("Manufacterer ID: %02X (%s)\n", mfg, mfg == 0xBF ? "ok" : "incorrect");
+    printf("Device ID: %02X (%s)\n", dev, dev == 0xB5 ? "ok" : "incorrect");
 }
 
 static const struct cmd* flash_commands[] = {
