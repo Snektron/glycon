@@ -56,7 +56,7 @@ bool conn_open_serial(struct connection* conn, const char* path) {
     }
 
     // TODO: Don't hardcode serial attributes
-    if (!set_serial_attribs(fd, B115200, 0)) {
+    if (!set_serial_attribs(fd, B1000000, 0)) {
         close(fd);
         return false;
     }
