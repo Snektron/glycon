@@ -43,46 +43,46 @@ enum pin_direction {
 
 // Set the direction of the data pins.
 // 0 means input, 1 is output.
-inline void pinout_set_data_ddr(enum pin_direction direction) {
+static inline void pinout_set_data_ddr(enum pin_direction direction) {
     PINOUT_DATA_DDR = -(int) direction;
 }
 
 // Set the direction of the address pins.
 // 0 means input, 1 is output.
-inline void pinout_set_addr_ddr(enum pin_direction direction) {
+static inline void pinout_set_addr_ddr(enum pin_direction direction) {
     PINOUT_ADDR_HI_DDR = -(int) direction;
     PINOUT_ADDR_LO_DDR = -(int) direction;
 }
 
 // Write a value to the data bus.
 // Requires that the data bus DDR is set to output.
-inline void pinout_write_data(uint8_t data) {
+static inline void pinout_write_data(uint8_t data) {
     PINOUT_DATA_PORT = data;
 }
 
 // Read a value from the data bus.
 // Requires that the data bus DDR is set to input.
-inline uint8_t pinout_read_data(void) {
+static inline uint8_t pinout_read_data(void) {
     return PINOUT_DATA_PIN;
 }
 
 // Write a value to the address bus.
 // Requires that the address bus DDR is set to output.
-inline void pinout_write_addr(uint16_t addr) {
+static inline void pinout_write_addr(uint16_t addr) {
     PINOUT_ADDR_HI_PORT = addr >> 8;
     PINOUT_ADDR_LO_PORT = addr & 0xFF;
 }
 
 // Read a value from the address bus.
 // Requires that the address bus DDR is set to input.
-inline uint16_t pinout_read_addr(void) {
+static inline uint16_t pinout_read_addr(void) {
     return (PINOUT_ADDR_HI_PIN << 8) | PINOUT_ADDR_LO_PIN;
 }
 
 // Enable or disable output from both the ram and flash chip.
 // When disabled, this pulls the MEM_OE pin HIGH.
 // Requires that MEM_OE DDR is set to output.
-inline void pinout_enable_mem_output(bool enable) {
+static inline void pinout_enable_mem_output(bool enable) {
     if (enable) {
         PINOUT_MEM_OE_PORT &= ~PINOUT_MEM_OE_MASK;
     } else {

@@ -1,6 +1,7 @@
 #include "pinout.h"
 #include "serial.h"
 #include "flash.h"
+#include "bus.h"
 
 #include "bdbp/binary_debug_protocol.h"
 
@@ -10,26 +11,16 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-// Delay value was found by experimentation - the minimum delay which
-// produced correct results was about 500ns, double that for safety.
-#define delay() _delay_us(1);
-
 void cmd_write(uint8_t data_len) {
     uint8_t address_hi = serial_poll_byte();
     uint8_t address_lo = serial_poll_byte();
     uint8_t data = serial_poll_byte();
     uint16_t address = (address_hi << 8) | address_lo;
 
-    pinout_set_data_ddr(PIN_OUTPUT);
-    pinout_write_addr(address);
-    pinout_write_data(data);
-    delay();
-    PINOUT_RAM_WE_PORT &= ~PINOUT_RAM_WE_MASK;
-    delay();
-    PINOUT_RAM_WE_PORT |= PINOUT_RAM_WE_MASK;
-    delay();
-    pinout_set_data_ddr(PIN_INPUT);
-    pinout_write_data(0);
+    bus_acquire();
+    bus_set_mode(BUS_MODE_WRITE_MEM);
+    bus_write(address, data);
+    bus_pulse_ram_write();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
     serial_write_byte(0);
@@ -41,9 +32,11 @@ void cmd_read(uint8_t data_len) {
     uint8_t amt = serial_poll_byte();
     (void) amt;
     uint16_t address = (address_hi << 8) | address_lo;
-    pinout_write_addr(address);
-    delay();
-    uint8_t data = pinout_read_data();
+
+    bus_acquire();
+    bus_set_mode(BUS_MODE_READ_MEM);
+    uint8_t data = bus_read(address);
+    bus_release();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
     serial_write_byte(1);
@@ -56,15 +49,19 @@ void cmd_flash(uint8_t data_len) {
     uint8_t data = serial_poll_byte();
     uint16_t address = (address_hi << 8) | address_lo;
 
+    bus_acquire();
     flash_byte_program(address, data);
+    bus_release();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
     serial_write_byte(0);
 }
 
 void cmd_flash_id() {
+    bus_acquire();
     uint8_t mfg, dev;
     flash_get_software_id(&mfg, &dev);
+    bus_release();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
     serial_write_byte(2);
@@ -74,18 +71,10 @@ void cmd_flash_id() {
 
 int main(void) {
     PINOUT_LED_DDR |= PINOUT_LED_MASK;
-    PINOUT_RAM_WE_DDR |= PINOUT_RAM_WE_MASK;
-    PINOUT_RAM_WE_PORT |= PINOUT_RAM_WE_MASK;
 
-    pinout_enable_mem_output(true);
-
-    flash_init();
-
+    bus_init();
     serial_init();
     sei();
-
-    pinout_set_addr_ddr(PIN_OUTPUT);
-    pinout_set_data_ddr(PIN_INPUT);
 
     while (1) {
         serial_wait_for_data();
