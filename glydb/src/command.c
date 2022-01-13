@@ -210,7 +210,7 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
 
     // Note, correctly zero-intializes options.
     result->options = calloc(num_optionals, sizeof(struct cmd_parsed_optional));
-    result->positionals = calloc(min_positionals, sizeof(const char*));
+    result->positionals = calloc(min_positionals, sizeof(union value_data));
 
     while (true) {
         parser_skip_ws(p);
@@ -243,7 +243,7 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
 
             if (++result->positionals_len >= min_positionals) {
                 // TODO: More efficient realloc
-                result->positionals = realloc(result->positionals, result->positionals_len);
+                result->positionals = realloc(result->positionals, result->positionals_len * sizeof(union value_data));
             }
             result->positionals[index] = value;
             continue;

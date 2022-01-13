@@ -1,56 +1,74 @@
 #include "commands/commands.h"
 #include "debugger.h"
+#include "glycon.h"
 #include "bdbp/binary_debug_protocol.h"
 #include "bdbp_util.h"
 
 #include <stdio.h>
 
 static void memory_write(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint16_t address = args->positionals[0].as_int;
-    uint8_t data = args->positionals[1].as_int;
+    int64_t repeat = args->options[0].present ? args->options[0].value.as_int : 1;
+    int64_t width = args->options[1].present ? args->options[1].value.as_int : 1;
 
-    uint8_t buf[BDBP_MAX_MSG_LENGTH];
-    bdbp_pkt_init(buf, BDBP_CMD_WRITE);
-    bdbp_pkt_append_u16(buf, address);
-    bdbp_pkt_append_u8(buf, data);
-    debugger_exec_cmd(dbg, buf);
+    if (repeat < 1) {
+        debugger_print_error(dbg, "Repeat %ld should be at least 1.", repeat);
+        return;
+    } else if (width < 1 || width > 8) {
+        debugger_print_error(dbg, "Width %ld outside of valid range [1, 8].", width);
+        return;
+    }
+
+    uint16_t address = args->positionals[0].as_int;
+    size_t i = 0;
+    for (size_t j = 0; j < repeat; ++j) {
+        for (size_t k = 1; k < args->positionals_len; ++k) {
+            int64_t value = args->positionals[k].as_int;
+            for (size_t l = 0; l < width; ++l) {
+                uint8_t data = (value >> (l * 8)) & 0xFF;
+                // Note: this check also prevents overflowing the scratch buffer.
+                if (((uint16_t)(address + i) & GLYCON_RAM_MASK) == 0) {
+                    debugger_print_error(dbg, "`memory write` cannot write to flash.");
+                    return;
+                }
+                dbg->scratch[i++] = data;
+            }
+        }
+    }
+
+    debugger_write_memory(dbg, address, i, dbg->scratch);
 }
 
 static void memory_read(struct debugger* dbg, const struct cmd_parse_result* args) {
     uint16_t address = args->positionals[0].as_int;
-    size_t amt = args->positionals_len > 1 ? args->positionals[1].as_int : 1;
+    int64_t amt = args->positionals_len > 1 ? args->positionals[1].as_int : 1;
+    if (amt < 1 || amt > GLYCON_ADDRSPACE_SIZE) {
+        debugger_print_error(dbg, "amount %ld outside valid range [1, %d]", amt, GLYCON_ADDRSPACE_SIZE);
+        return;
+    }
+
+    if (debugger_read_memory(dbg, address, amt, dbg->scratch))
+        return;
 
     uint8_t bytes_per_line = 16;
-    // Round down the number of bytes were going to handle per packet to a multiple of the line
-    // size so that we don't need to handle them weird.
-    uint8_t bytes_per_packet = (BDBP_MAX_DATA_LENGTH - 3) / bytes_per_line * bytes_per_line;
-
-    uint8_t buf[BDBP_MAX_MSG_LENGTH];
-    for (size_t i = 0; i < amt; i += bytes_per_packet) {
-        size_t bytes_left = amt - i;
-        uint8_t packet_bytes = bytes_left > bytes_per_packet ? bytes_per_packet : bytes_left;
-        bdbp_pkt_init(buf, BDBP_CMD_READ);
-        bdbp_pkt_append_u16(buf, address + i);
-        bdbp_pkt_append_u8(buf, packet_bytes);
-        if (debugger_exec_cmd(dbg, buf))
-            return;
-
-        for (size_t j = 0; j < packet_bytes; j += bytes_per_line) {
-            printf("%04X:", (uint16_t)(address + i + j));
-            for (uint8_t k = 0; k < bytes_per_line && k + j < packet_bytes; ++k) {
-                printf(" %02X", buf[BDBP_FIELD_DATA + j + k]);
-            }
-            puts("");
+    for (size_t i = 0; i < amt; i += bytes_per_line) {
+        printf("%04X:", (uint16_t)(address + i));
+        for (uint8_t j = 0; j < bytes_per_line && j + i < amt; ++j) {
+            printf(" %02X", dbg->scratch[j + i]);
         }
+        puts("");
     }
 }
 
 static const struct cmd* memory_commands[] = {
     &(struct cmd){CMD_TYPE_LEAF, "write", "Write to target memory.", {.leaf = {
-        .options = NULL,
+        .options = (struct cmd_option[]){
+            {"repeat", 'r', VALUE_TYPE_INT, "amount", "Repeat the data the given amount of times before writing (default: 1)."},
+            {"width", 'w', VALUE_TYPE_INT, "width", "Width in bytes of each individual data point. Values will be truncated to this size. (default 1)."},
+            {}
+        },
         .positionals = (struct cmd_positional[]){
             {VALUE_TYPE_INT, "address", "The address to write to."},
-            {VALUE_TYPE_INT, "value", "Value to write."},
+            {VALUE_TYPE_INT, "value", "Values to write.", CMD_VARIADIC},
             {}
         },
         .payload = memory_write

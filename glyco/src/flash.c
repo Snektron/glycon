@@ -28,6 +28,8 @@ static void flash_begin_cmd(void) {
 }
 
 void flash_byte_program(uint16_t address, uint8_t data) {
+    if (address & 0x8000 != 0)
+        return;
     flash_begin_cmd();
     flash_cmd(0x5555, 0xAA);
     flash_cmd(0x2AAA, 0x55);

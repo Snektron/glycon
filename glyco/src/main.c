@@ -51,11 +51,13 @@ void cmd_flash(uint8_t data_len) {
     uint8_t address_hi = serial_poll_byte();
     uint8_t address_lo = serial_poll_byte();
     data_len -= 2;
-    uint8_t data = serial_poll_byte();
     uint16_t address = (address_hi << 8) | address_lo;
 
     bus_acquire();
-    flash_byte_program(address, data);
+    for (uint8_t i = 0; i < data_len; ++i) {
+        uint8_t data = serial_poll_byte();
+        flash_byte_program(address + i, data);
+    }
     bus_release();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);

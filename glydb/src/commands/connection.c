@@ -9,9 +9,9 @@
 static void connection_open(struct debugger* dbg, const struct cmd_parse_result* args) {
     const char* path = args->positionals_len == 0 ? "/dev/ttyUSB0" : args->positionals[0].as_str;
     if (conn_is_open(&dbg->conn)) {
-        puts("error: A connection is already open. Close it first with `connection close`.");
+        debugger_print_error(dbg, "A connection is already open. Close it first with `connection close`.");
     } else if (!conn_open_serial(&dbg->conn, path)) {
-        printf("error: Failed to open serial port '%s': %s.\n", path, strerror(errno));
+        debugger_print_error(dbg, "Failed to open serial port '%s': %s.", path, strerror(errno));
     }
 }
 

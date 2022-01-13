@@ -70,8 +70,10 @@ bool conn_open_serial(struct connection* conn, const char* path) {
 }
 
 void conn_close(struct connection* conn) {
-    free(conn->port);
-    close(conn->fd);
+    if (conn->fd != -1) {
+        free(conn->port);
+        close(conn->fd);
+    }
     conn->fd = -1;
     conn->port = NULL;
 }
