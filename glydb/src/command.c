@@ -39,16 +39,16 @@ static void report_invalid_short_option(char opt) {
     printf("error: Invalid option -%c.\n", opt);
 }
 
-// static void report_duplicate_option(const struct cmd_option* opt) {
-//     printf("error: Duplicate option ");
-//     if (opt->shorthand && opt->name) {
-//         printf("-%c/--%s.\n", opt->shorthand, opt->name);
-//     } else if (opt->shorthand) {
-//         printf("-%c.\n", opt->shorthand);
-//     } else {
-//         printf("--%s.\n", opt->name);
-//     }
-// }
+static void report_duplicate_option(const struct cmd_option* opt) {
+    printf("error: Duplicate option ");
+    if (opt->shorthand && opt->name) {
+        printf("-%c/--%s.\n", opt->shorthand, opt->name);
+    } else if (opt->shorthand) {
+        printf("-%c.\n", opt->shorthand);
+    } else {
+        printf("--%s.\n", opt->name);
+    }
+}
 
 static void report_missing_positional(const struct cmd* cmd, size_t i) {
     printf("error: Missing required positional argument <%s>.\n", cmd->leaf.positionals[i].value_name);
@@ -90,13 +90,14 @@ static bool parse_long_option(struct cmd_parse_result* result, struct parser* p,
         if (strncmp(opt->name, option, option_len) != 0)
             continue;
 
-        // if (result->options[i]) {
-        //     report_duplicate_option(opt);
-        //     return false;
-        // }
+        if (result->options[i].present) {
+            report_duplicate_option(opt);
+            return false;
+        }
 
         if (!opt->value_name) {
-            result->options[i].as_bool = true;
+            result->options[i].value.as_bool = true;
+            result->options[i].present = true;
             return true;
         }
 
@@ -112,7 +113,8 @@ static bool parse_long_option(struct cmd_parse_result* result, struct parser* p,
             report_value_parse_error(p, status);
             return false;
         }
-        result->options[i] = value;
+        result->options[i].value = value;
+        result->options[i].present = true;
         return true;
     }
 
@@ -138,15 +140,16 @@ static bool parse_short_options(struct cmd_parse_result* result, struct parser* 
             if (opt->shorthand != option)
                 continue;
 
-            // if (result->options[i]) {
-            //     report_duplicate_option(opt);
-            //     return false;
-            // }
+            if (result->options[i].present) {
+                report_duplicate_option(opt);
+                return false;
+            }
 
             ++p->offset;
 
             if (!opt->value_name) {
-                result->options[i].as_bool = true;
+                result->options[i].value.as_bool = true;
+                result->options[i].present = true;
                 goto next_option;
             }
 
@@ -162,7 +165,8 @@ static bool parse_short_options(struct cmd_parse_result* result, struct parser* 
                 report_value_parse_error(p, status);
                 return false;
             }
-            result->options[i] = value;
+            result->options[i].value = value;
+            result->options[i].present = true;
             return true;
         }
 
@@ -205,7 +209,7 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
     }
 
     // Note, correctly zero-intializes options.
-    result->options = calloc(num_optionals, sizeof(const char*));
+    result->options = calloc(num_optionals, sizeof(struct cmd_parsed_optional));
     result->positionals = calloc(min_positionals, sizeof(const char*));
 
     while (true) {
@@ -315,8 +319,8 @@ void cmd_parse_result_deinit(struct cmd_parse_result* result) {
     if (result->matched_command && result->matched_command->type == CMD_TYPE_LEAF) {
         const struct cmd_option* options = result->matched_command->leaf.options;
         for (size_t i = 0; options && cmd_option_is_valid(&options[i]); ++i) {
-            if (options[i].value_type == VALUE_TYPE_STR) {
-                free(result->options[i].as_str);
+            if (options[i].value_type == VALUE_TYPE_STR && result->options[i].present) {
+                free(result->options[i].value.as_str);
             }
         }
 

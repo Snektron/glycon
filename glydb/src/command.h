@@ -54,13 +54,19 @@ struct cmd {
     };
 };
 
+struct cmd_parsed_optional {
+    union value_data value;
+    bool present;
+};
+
 struct cmd_parse_result {
     // The most recently matched command.
     // May be empty if the input was empty, which is technically a valid command.
     const struct cmd* matched_command;
 
     // One for each of the matched command's options array.
-    union value_data* options;
+    struct cmd_parsed_optional* options;
+
     union value_data* positionals;
     size_t positionals_len;
 };
