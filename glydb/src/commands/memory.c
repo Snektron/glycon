@@ -1,6 +1,7 @@
 #include "commands/commands.h"
 #include "debugger.h"
 #include "bdbp_util.h"
+#include "target.h"
 
 #include "common/glycon.h"
 #include "common/binary_debug_protocol.h"
@@ -36,7 +37,7 @@ static void memory_write(struct debugger* dbg, const struct cmd_parse_result* ar
         }
     }
 
-    debugger_write_memory(dbg, address, i, dbg->scratch);
+    target_write_memory(dbg, address, i, dbg->scratch);
 }
 
 static void memory_read(struct debugger* dbg, const struct cmd_parse_result* args) {
@@ -47,7 +48,7 @@ static void memory_read(struct debugger* dbg, const struct cmd_parse_result* arg
         return;
     }
 
-    if (debugger_read_memory(dbg, address, amt, dbg->scratch))
+    if (target_read_memory(dbg, address, amt, dbg->scratch))
         return;
 
     uint8_t bytes_per_line = 16;

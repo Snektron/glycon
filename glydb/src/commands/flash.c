@@ -1,6 +1,7 @@
 #include "commands/commands.h"
 #include "debugger.h"
 #include "bdbp_util.h"
+#include "target.h"
 
 #include "common/glycon.h"
 #include "common/binary_debug_protocol.h"
@@ -11,21 +12,21 @@ static void flash_write(struct debugger* dbg, const struct cmd_parse_result* arg
     uint16_t address = args->positionals[0].as_int;
     uint8_t data = args->positionals[1].as_int;
 
-    uint8_t buf[BDBP_MAX_MSG_LENGTH];
-    bdbp_pkt_init(buf, BDBP_CMD_WRITE_FLASH);
-    bdbp_pkt_append_u16(buf, address);
-    bdbp_pkt_append_u8(buf, data);
-    debugger_exec_cmd(dbg, buf);
+    uint8_t pkt[BDBP_MAX_MSG_LENGTH];
+    bdbp_pkt_init(pkt, BDBP_CMD_WRITE_FLASH);
+    bdbp_pkt_append_u16(pkt, address);
+    bdbp_pkt_append_u8(pkt, data);
+    target_exec_cmd(dbg, pkt);
 }
 
 static void flash_info(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint8_t buf[BDBP_MAX_MSG_LENGTH];
-    bdbp_pkt_init(buf, BDBP_CMD_FLASH_ID);
-    if (debugger_exec_cmd(dbg, buf))
+    uint8_t pkt[BDBP_MAX_MSG_LENGTH];
+    bdbp_pkt_init(pkt, BDBP_CMD_FLASH_ID);
+    if (target_exec_cmd(dbg, pkt))
        return;
 
-    uint8_t mfg = buf[BDBP_FIELD_DATA + 0];
-    uint8_t dev = buf[BDBP_FIELD_DATA + 1];
+    uint8_t mfg = pkt[BDBP_FIELD_DATA + 0];
+    uint8_t dev = pkt[BDBP_FIELD_DATA + 1];
 
     printf("Manufacterer ID: %02X (%s)\n", mfg, mfg == 0xBF ? "ok" : "incorrect");
     printf("Device ID: %02X (%s)\n", dev, dev == 0xB5 ? "ok" : "incorrect");
@@ -38,16 +39,16 @@ static void flash_erase_sector(struct debugger* dbg, const struct cmd_parse_resu
         return;
     }
 
-    uint8_t buf[BDBP_MAX_MSG_LENGTH];
-    bdbp_pkt_init(buf, BDBP_CMD_ERASE_SECTOR);
-    bdbp_pkt_append_u16(buf, address);
-    debugger_exec_cmd(dbg, buf);
+    uint8_t pkt[BDBP_MAX_MSG_LENGTH];
+    bdbp_pkt_init(pkt, BDBP_CMD_ERASE_SECTOR);
+    bdbp_pkt_append_u16(pkt, address);
+    target_exec_cmd(dbg, pkt);
 }
 
 static void flash_erase_chip(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint8_t buf[BDBP_MAX_MSG_LENGTH];
-    bdbp_pkt_init(buf, BDBP_CMD_ERASE_CHIP);
-    debugger_exec_cmd(dbg, buf);
+    uint8_t pkt[BDBP_MAX_MSG_LENGTH];
+    bdbp_pkt_init(pkt, BDBP_CMD_ERASE_CHIP);
+    target_exec_cmd(dbg, pkt);
 }
 
 static const struct cmd* erase_commands[] = {

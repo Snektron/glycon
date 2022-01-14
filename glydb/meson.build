@@ -5,6 +5,7 @@ sources = [
     'src/debugger.c',
     'src/main.c',
     'src/parser.c',
+    'src/target.c',
     'src/value.c',
     'src/commands/commands.c',
     'src/commands/connection.c',
