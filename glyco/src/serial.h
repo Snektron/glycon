@@ -21,9 +21,13 @@ void serial_poll_for_data();
 
 // Return the next byte in the serial receive buffer.
 // If no data is available, returns -1.
-int serial_read_byte();
+int serial_read_u8();
 
-int serial_poll_byte();
+// Block until the next byte is available.
+uint8_t serial_poll_u8();
+
+// Block until the next wordt is available. Returns little-endian.
+uint16_t serial_poll_u16();
 
 // Write one byte to serial. Blocks until the byte is written.
 void serial_write_byte(uint8_t value);

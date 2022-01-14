@@ -74,15 +74,21 @@ void serial_poll_for_data() {
         continue;
 }
 
-int serial_read_byte() {
+int serial_read_u8() {
     if (ring_buffer_is_empty(&rx_buffer))
         return -1;
     return ring_buffer_read(&rx_buffer);
 }
 
-int serial_poll_byte() {
+uint8_t serial_poll_u8() {
     serial_poll_for_data();
     return ring_buffer_read(&rx_buffer);
+}
+
+uint16_t serial_poll_u16() {
+    uint8_t hi = serial_poll_u8();
+    uint8_t lo = serial_poll_u8();
+    return (hi << 8) | lo;
 }
 
 void serial_write_byte(uint8_t value) {
