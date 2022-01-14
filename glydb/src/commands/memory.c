@@ -1,8 +1,9 @@
 #include "commands/commands.h"
 #include "debugger.h"
-#include "glycon.h"
-#include "bdbp/binary_debug_protocol.h"
 #include "bdbp_util.h"
+
+#include "common/glycon.h"
+#include "common/binary_debug_protocol.h"
 
 #include <stdio.h>
 

@@ -12,6 +12,6 @@ if not meson.is_cross_build()
     error('Glycon should be cross-compiled for the co-processor: meson build --cross-file cross/avr-atmega2560-cross.ini')
 endif
 
-subdir('bdbp')
+subdir('common')
 subdir('glyco')
 subdir('glydb')

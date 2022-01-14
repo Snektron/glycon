@@ -3,6 +3,8 @@
 #include "bus.h"
 #include "timing.h"
 
+#include "common/glycon.h"
+
 #include <stddef.h>
 
 #define FLASH_SOFTWARE_ID_MFG_ADDR (0x0000)
@@ -22,7 +24,7 @@ static void flash_begin_cmd(void) {
 }
 
 void flash_byte_program(uint16_t address, uint8_t data) {
-    if ((address & 0x8000) != 0) // Don't attempt to write to RAM.
+    if (!glycon_is_flash_addr(address)) // Don't attempt to write to RAM.
         return;
     flash_begin_cmd();
     flash_cmd(0x5555, 0xAA);
@@ -55,7 +57,7 @@ void flash_get_software_id(uint8_t* mfg, uint8_t* dev) {
 }
 
 void flash_erase_sector(uint16_t sector_address) {
-    if ((sector_address & 0x8000) != 0) // Don't attempt to erase RAM.
+    if (!glycon_is_flash_addr(sector_address)) // Don't attempt to erase RAM.
         return;
     flash_begin_cmd();
     flash_cmd(0x5555, 0xAA);

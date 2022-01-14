@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "bdbp/binary_debug_protocol.h"
+#include "common/binary_debug_protocol.h"
 
 const char* bdbp_status_to_string(enum bdbp_status status);
 

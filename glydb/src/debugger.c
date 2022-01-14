@@ -2,9 +2,10 @@
 #include "command.h"
 #include "parser.h"
 #include "bdbp_util.h"
-#include "glycon.h"
 #include "commands/commands.h"
-#include "bdbp/binary_debug_protocol.h"
+
+#include "common/glycon.h"
+#include "common/binary_debug_protocol.h"
 
 #include <stdio.h>
 #include <string.h>

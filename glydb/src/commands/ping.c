@@ -1,7 +1,8 @@
 #include "commands/commands.h"
 #include "debugger.h"
-#include "bdbp/binary_debug_protocol.h"
 #include "bdbp_util.h"
+
+#include "common/binary_debug_protocol.h"
 
 #include <fcntl.h>
 #include <stdio.h>

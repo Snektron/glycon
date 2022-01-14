@@ -1,5 +1,5 @@
-#ifndef _BDBP_BINARY_DEBUG_PROTOCOL_H
-#define _BDBP_BINARY_DEBUG_PROTOCOL_H
+#ifndef _COMMON_BINARY_DEBUG_PROTOCOL_H
+#define _COMMON_BINARY_DEBUG_PROTOCOL_H
 
 // General message format:
 //

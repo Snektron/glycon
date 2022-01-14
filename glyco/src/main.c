@@ -3,7 +3,7 @@
 #include "flash.h"
 #include "bus.h"
 
-#include "bdbp/binary_debug_protocol.h"
+#include "common/binary_debug_protocol.h"
 
 #include <stdint.h>
 #include <stddef.h>

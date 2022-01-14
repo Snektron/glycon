@@ -24,5 +24,5 @@ executable(
     sources,
     dependencies: deps,
     native: true,
-    include_directories: [bdbp_inc, include_directories('src')],
+    include_directories: [common_inc, include_directories('src')],
 )
