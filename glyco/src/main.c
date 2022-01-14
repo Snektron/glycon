@@ -76,6 +76,28 @@ void cmd_flash_id() {
     serial_write_byte(dev);
 }
 
+void cmd_erase_sector() {
+    uint8_t address_hi = serial_poll_byte();
+    uint8_t address_lo = serial_poll_byte();
+    uint16_t address = (address_hi << 8) | address_lo;
+
+    bus_acquire();
+    flash_erase_sector(address);
+    bus_release();
+
+    serial_write_byte(BDBP_STATUS_SUCCESS);
+    serial_write_byte(0);
+}
+
+void cmd_erase_chip() {
+    bus_acquire();
+    flash_erase_chip();
+    bus_release();
+
+    serial_write_byte(BDBP_STATUS_SUCCESS);
+    serial_write_byte(0);
+}
+
 int main(void) {
     PINOUT_LED_DDR |= PINOUT_LED_MASK;
 
@@ -104,6 +126,12 @@ int main(void) {
                 break;
             case BDBP_CMD_FLASH_ID:
                 cmd_flash_id();
+                break;
+            case BDBP_CMD_ERASE_SECTOR:
+                cmd_erase_sector();
+                break;
+            case BDBP_CMD_ERASE_CHIP:
+                cmd_erase_chip();
                 break;
             default:
                 // Delete any data bytes that follow

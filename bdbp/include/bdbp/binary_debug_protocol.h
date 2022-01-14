@@ -18,14 +18,14 @@ enum bdbp_cmd {
 
     // Write to target memory. Data field consists of 2 + variable bytes: the address, and the data
     // to write.
-    // | 0x02 | 0x02 + var | ADDR (2 byte) | DATA (DLEN - 2 bytes) |
+    // | 0x02 | 0x02 + var | ADDR (2 bytes) | DATA (DLEN - 2 bytes) |
     // Successful response has no data.
     BDBP_CMD_WRITE = 0x02,
 
     // Read from target memory. Data field consists of 3 bytes: the address to start reading from,
     // and the number of bytes to read.
     // | 0x03 | 0x03 | ADDR (2 byte) | AMT (1 byte) |
-    // Successfull response carries the bytes from the requested memory location.
+    // Successful response carries the bytes from the requested memory location.
     // | 0x01 | var | DATA (var bytes) |
     BDBP_CMD_READ = 0x03,
 
@@ -36,9 +36,20 @@ enum bdbp_cmd {
 
     // Retrieve the flash software ID of the target. Takes no data.
     // | 0x05 | 0x00 |
-    // Successfull response carries the manufacterer ID and device ID of the flash chip.
+    // Successful response carries the manufacterer ID and device ID of the flash chip.
     // | 0x01 | 0x02 | MFG ID (1 byte) | DEV ID (1 byte) |
     BDBP_CMD_FLASH_ID = 0x05,
+
+    // Erase a single sector of the flash chip. Data field consists of an address; the sector of which
+    // to erase. Sectors are 4 kilobytes and aligned to 4 kilobytes.
+    // | 0x06 | 0x02 | ADDR (2 bytes) |
+    // Successful response has no data.
+    BDBP_CMD_ERASE_SECTOR = 0x06,
+
+    // Erase the entire flash chip. Carries no data.
+    // | 0x07 | 0x00 |
+    // Successful response has no data.
+    BDBP_CMD_ERASE_CHIP = 0x07,
 };
 
 enum bdbp_status {

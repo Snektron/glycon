@@ -26,7 +26,7 @@ static void memory_write(struct debugger* dbg, const struct cmd_parse_result* ar
             for (size_t l = 0; l < width; ++l) {
                 uint8_t data = (value >> (l * 8)) & 0xFF;
                 // Note: this check also prevents overflowing the scratch buffer.
-                if (((uint16_t)(address + i) & GLYCON_RAM_MASK) == 0) {
+                if (!glycon_is_ram_addr((uint16_t)(address + i))) {
                     debugger_print_error(dbg, "`memory write` cannot write to flash.");
                     return;
                 }
@@ -88,6 +88,6 @@ static const struct cmd* memory_commands[] = {
 const struct cmd command_memory = {
     .type = CMD_TYPE_DIRECTORY,
     .name = "memory",
-    .help = "Manipulate target memory",
+    .help = "Manipulate target memory.",
     {.directory = {memory_commands}}
 };
