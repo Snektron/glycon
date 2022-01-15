@@ -9,14 +9,19 @@
 #include <stdio.h>
 
 static void flash_write(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint16_t address = args->positionals[0].as_int;
-    uint8_t data = args->positionals[1].as_int;
+    uint16_t address;
+    size_t len;
+    if (subcommand_write(dbg, args, &address, &len, dbg->scratch))
+        return;
 
-    uint8_t pkt[BDBP_MAX_MSG_LENGTH];
-    bdbp_pkt_init(pkt, BDBP_CMD_WRITE_FLASH);
-    bdbp_pkt_append_u16(pkt, address);
-    bdbp_pkt_append_u8(pkt, data);
-    target_exec_cmd(dbg, pkt);
+    if (!glycon_is_flash_addr(address)) {
+        debugger_print_error(dbg, "Base address does not lie within flash address space. Use `memory write` to write to ram.");
+        return;
+    } else if (address + len > GLYCON_FLASH_END) {
+        debugger_print_error(dbg, "Write overflows flash address space.");
+    }
+
+    target_write_memory(dbg, address, len, dbg->scratch);
 }
 
 static void flash_info(struct debugger* dbg, const struct cmd_parse_result* args) {

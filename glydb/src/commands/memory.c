@@ -9,39 +9,28 @@
 #include <stdio.h>
 
 static void memory_write(struct debugger* dbg, const struct cmd_parse_result* args) {
-    int64_t repeat = args->options[0].present ? args->options[0].value.as_int : 1;
-    int64_t width = args->options[1].present ? args->options[1].value.as_int : 1;
+    uint16_t address;
+    size_t len;
+    if (subcommand_write(dbg, args, &address, &len, dbg->scratch))
+        return;
 
-    if (repeat < 1) {
-        debugger_print_error(dbg, "Repeat %ld should be at least 1.", repeat);
+    if (!glycon_is_ram_addr(address)) {
+        debugger_print_error(dbg, "Base address does not lie within ram address space. Use `flash write` to write to flash storage.");
         return;
-    } else if (width < 1 || width > 8) {
-        debugger_print_error(dbg, "Width %ld outside of valid range [1, 8].", width);
-        return;
+    } else if (address + len > GLYCON_RAM_END) {
+        debugger_print_error(dbg, "Write overflows ram address space.");
     }
 
-    uint16_t address = args->positionals[0].as_int;
-    size_t i = 0;
-    for (size_t j = 0; j < repeat; ++j) {
-        for (size_t k = 1; k < args->positionals_len; ++k) {
-            int64_t value = args->positionals[k].as_int;
-            for (size_t l = 0; l < width; ++l) {
-                uint8_t data = (value >> (l * 8)) & 0xFF;
-                // Note: this check also prevents overflowing the scratch buffer.
-                if (!glycon_is_ram_addr((uint16_t)(address + i))) {
-                    debugger_print_error(dbg, "`memory write` cannot write to flash.");
-                    return;
-                }
-                dbg->scratch[i++] = data;
-            }
-        }
-    }
-
-    target_write_memory(dbg, address, i, dbg->scratch);
+    target_write_memory(dbg, address, len, dbg->scratch);
 }
 
 static void memory_read(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint16_t address = args->positionals[0].as_int;
+    int64_t address = args->positionals[0].as_int;
+    if (address < 0 || address > GLYCON_ADDRSPACE_SIZE) {
+        debugger_print_error(dbg, "Address %ld outside of valid range [0, %d).", address, GLYCON_ADDRSPACE_SIZE);
+        return;
+    }
+
     int64_t amt = args->positionals_len > 1 ? args->positionals[1].as_int : 1;
     if (amt < 1 || amt > GLYCON_ADDRSPACE_SIZE) {
         debugger_print_error(dbg, "amount %ld outside valid range [1, %d]", amt, GLYCON_ADDRSPACE_SIZE);
@@ -63,16 +52,8 @@ static void memory_read(struct debugger* dbg, const struct cmd_parse_result* arg
 
 static const struct cmd* memory_commands[] = {
     &(struct cmd){CMD_TYPE_LEAF, "write", "Write to target memory.", {.leaf = {
-        .options = (struct cmd_option[]){
-            {"repeat", 'r', VALUE_TYPE_INT, "amount", "Repeat the data the given amount of times before writing (default: 1)."},
-            {"width", 'w', VALUE_TYPE_INT, "width", "Width in bytes of each individual data point. Values will be truncated to this size. (default 1)."},
-            {}
-        },
-        .positionals = (struct cmd_positional[]){
-            {VALUE_TYPE_INT, "address", "The address to write to."},
-            {VALUE_TYPE_INT, "value", "Values to write.", CMD_VARIADIC},
-            {}
-        },
+        .options = subcommand_write_opts,
+        .positionals = subcommand_write_pos,
         .payload = memory_write
     }}},
     &(struct cmd){CMD_TYPE_LEAF, "read", "Read from target memory.", {.leaf = {
