@@ -25,7 +25,7 @@ const struct cmd_positional subcommand_write_pos[] = {
     {}
 };
 
-bool subcommand_write(struct debugger* dbg, const struct cmd_parse_result* args, uint16_t* address, size_t* size, uint8_t* buffer) {
+bool subcommand_write(struct debugger* dbg, const struct cmd_parse_result* args, struct debugger_write_op* op, uint8_t* buffer) {
     int64_t repeat = args->options[0].present ? args->options[0].value.as_int : 1;
     int64_t width = args->options[1].present ? args->options[1].value.as_int : 1;
 
@@ -37,9 +37,9 @@ bool subcommand_write(struct debugger* dbg, const struct cmd_parse_result* args,
         return true;
     }
 
-    int64_t address_arg = args->positionals[0].as_int;
-    if (address_arg < 0 || address_arg > GLYCON_ADDRSPACE_SIZE) {
-        debugger_print_error(dbg, "Address %ld outside of valid range [0, %d).", address_arg, GLYCON_ADDRSPACE_SIZE);
+    int64_t address = args->positionals[0].as_int;
+    if (address < 0 || address > GLYCON_ADDRSPACE_SIZE) {
+        debugger_print_error(dbg, "Address %ld outside of valid range [0, %d).", address, GLYCON_ADDRSPACE_SIZE);
         return true;
     }
 
@@ -49,7 +49,7 @@ bool subcommand_write(struct debugger* dbg, const struct cmd_parse_result* args,
             int64_t value = args->positionals[k].as_int;
             for (size_t l = 0; l < width; ++l) {
                 uint8_t data = (value >> (l * 8)) & 0xFF;
-                if (address_arg + i > GLYCON_ADDRSPACE_SIZE) {
+                if (address + i > GLYCON_ADDRSPACE_SIZE) {
                     debugger_print_error(dbg, "Write overflows address space.");
                     return true;
                 }
@@ -58,7 +58,35 @@ bool subcommand_write(struct debugger* dbg, const struct cmd_parse_result* args,
         }
     }
 
-    *address = address_arg;
-    *size = i;
+    op->address = address;
+    op->len = i;
     return false;
+}
+
+const struct cmd_option subcommand_load_opts[] = {
+    {"type", 't', VALUE_TYPE_STR, "file type", "Override file type to either ihx or bin (default: infer from filename)."},
+    {}
+};
+
+const struct cmd_positional subcommand_load_pos[] = {
+    {VALUE_TYPE_STR, "filename", "Path specifying the file to load."},
+    {VALUE_TYPE_INT, "relocation", "Relocation address, which will be added to each data base address. The base address for `bin` files is 0.", CMD_OPTIONAL},
+    {}
+};
+
+bool subcommand_load(struct debugger* dbg, const struct cmd_parse_result* args, struct debugger_write_op** ops, uint8_t* buffer) {
+    const char* path = args->positionals[0].as_str;
+    int64_t relocation = args->positionals_len > 1 ? args->positionals[1].as_int : 0;
+    if (relocation < 0 || relocation > GLYCON_ADDRSPACE_SIZE) {
+        debugger_print_error(dbg, "Relocation address %ld outside of valid range [0, %d).", relocation, GLYCON_ADDRSPACE_SIZE);
+        return true;
+    }
+
+    struct debugger_load_file_options opts = {
+        .path = path,
+        .ext_override = args->options[0].present ? args->options[0].value.as_str : NULL,
+        .relocation = relocation
+    };
+
+    return debugger_load_file(dbg, &opts, ops, buffer);
 }

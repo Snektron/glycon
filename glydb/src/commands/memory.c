@@ -6,22 +6,27 @@
 #include "common/glycon.h"
 #include "common/binary_debug_protocol.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 
-static void memory_write(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint16_t address;
-    size_t len;
-    if (subcommand_write(dbg, args, &address, &len, dbg->scratch))
-        return;
-
-    if (!glycon_is_ram_addr(address)) {
+// TODO: handle multiple
+static void memory_write_op(struct debugger* dbg, const struct debugger_write_op* op) {
+    if (!glycon_is_ram_addr(op->address)) {
         debugger_print_error(dbg, "Base address does not lie within ram address space. Use `flash write` to write to flash storage.");
         return;
-    } else if (address + len > GLYCON_RAM_END) {
+    } else if (op->address + op->len > GLYCON_RAM_END) {
         debugger_print_error(dbg, "Write overflows ram address space.");
     }
 
-    target_write_memory(dbg, address, len, dbg->scratch);
+    target_write_memory(dbg, op->address, op->len, dbg->scratch);
+}
+
+static void memory_write(struct debugger* dbg, const struct cmd_parse_result* args) {
+    struct debugger_write_op op;
+    if (subcommand_write(dbg, args, &op, dbg->scratch))
+        return;
+
+    memory_write_op(dbg, &op);
 }
 
 static void memory_read(struct debugger* dbg, const struct cmd_parse_result* args) {
@@ -50,6 +55,15 @@ static void memory_read(struct debugger* dbg, const struct cmd_parse_result* arg
     }
 }
 
+static void memory_load(struct debugger* dbg, const struct cmd_parse_result* args) {
+    struct debugger_write_op* ops;
+    if (subcommand_load(dbg, args, &ops, dbg->scratch))
+        return;
+
+    memory_write_op(dbg, &ops[0]);
+    free(ops);
+}
+
 static const struct cmd* memory_commands[] = {
     &(struct cmd){CMD_TYPE_LEAF, "write", "Write to target memory.", {.leaf = {
         .options = subcommand_write_opts,
@@ -64,6 +78,11 @@ static const struct cmd* memory_commands[] = {
             {}
         },
         .payload = memory_read
+    }}},
+    &(struct cmd){CMD_TYPE_LEAF, "load", "Load a file and write it to target memory.", {.leaf = {
+        .options = subcommand_load_opts,
+        .positionals = subcommand_load_pos,
+        .payload = memory_load
     }}},
     NULL
 };

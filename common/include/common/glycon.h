@@ -26,4 +26,6 @@ static inline bool glycon_is_flash_addr(uint16_t address) {
     return (address & GLYCON_RAM_MASK) == 0;
 }
 
+#define GLYCON_FLASH_SECTOR_SIZE (0x4000)
+
 #endif

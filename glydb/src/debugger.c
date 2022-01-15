@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <assert.h>
 
 #include <editline.h>
 
@@ -83,4 +84,69 @@ void debugger_print_error(struct debugger* dbg, const char* fmt, ...) {
     vprintf(fmt, args);
     puts("");
     va_end(args);
+}
+
+static bool load_bin(struct debugger* dbg, const struct debugger_load_file_options* opts, struct debugger_write_op** ops, FILE* f, uint8_t* buffer) {
+    if (!fseek(f, 0, SEEK_END)) {
+        debugger_print_error(dbg, "Failed to seek.");
+        return false;
+    }
+
+    long size = ftell(f);
+    if (size < 0) {
+        debugger_print_error(dbg, "Failed to tell: %s.", strerror(errno));
+        return false;
+    }
+
+    if (size > GLYCON_ADDRSPACE_SIZE) {
+        debugger_print_error(dbg, "Binary file '%s' overflows address space.", opts->path);
+        return false;
+    }
+
+    rewind(f);
+    fread(buffer, 1, size, f);
+    if (ferror(f)) {
+        debugger_print_error(dbg, "Failed to read '%s'", opts->path);
+    }
+
+    // Second op indicates end.
+    *ops = calloc(2, sizeof(struct debugger_write_op));
+    assert(*ops);
+
+    (*ops)[0].address = opts->relocation;
+    (*ops)[0].len = size;
+    return true;
+}
+
+static bool load_ihex(struct debugger* dbg, const struct debugger_load_file_options* opts, struct debugger_write_op** ops, FILE* f, uint8_t* buffer) {
+    (void) opts;
+    (void) buffer;
+    fclose(f);
+    debugger_print_error(dbg, "TODO: Ihex loading.");
+    return false;
+}
+
+bool debugger_load_file(struct debugger* dbg, const struct debugger_load_file_options* opts, struct debugger_write_op** ops, uint8_t* buffer) {
+    const char* ext = opts->ext_override ? opts->ext_override  : strrchr(opts->path, '.');
+    if (!ext) {
+        debugger_print_error(dbg, "Unable to infer file type from '%s'.", opts->path);
+        return true;
+    }
+
+    FILE* f = fopen(opts->path, "rb");
+    if (!f) {
+        debugger_print_error(dbg, "Failed to open file '%s': %s.", opts->path, strerror(errno));
+        return false;
+    }
+
+    ++ext;
+    if (strcmp(ext, "bin") == 0) {
+        return load_bin(dbg, opts, ops, f, buffer);
+    } else if (strcmp(ext, "ihx") == 0) {
+        return load_ihex(dbg, opts, ops, f, buffer);
+    } else {
+        debugger_print_error(dbg, "Unknown file type '%s'.", ext);
+        fclose(f);
+        return false;
+    }
 }

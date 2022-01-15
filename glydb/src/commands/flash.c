@@ -6,22 +6,27 @@
 #include "common/glycon.h"
 #include "common/binary_debug_protocol.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 
-static void flash_write(struct debugger* dbg, const struct cmd_parse_result* args) {
-    uint16_t address;
-    size_t len;
-    if (subcommand_write(dbg, args, &address, &len, dbg->scratch))
-        return;
-
-    if (!glycon_is_flash_addr(address)) {
+// TODO: handle multiple
+static void flash_write_op(struct debugger* dbg, const struct debugger_write_op* op) {
+    if (!glycon_is_flash_addr(op->address)) {
         debugger_print_error(dbg, "Base address does not lie within flash address space. Use `memory write` to write to ram.");
         return;
-    } else if (address + len > GLYCON_FLASH_END) {
+    } else if (op->address + op->len > GLYCON_FLASH_END) {
         debugger_print_error(dbg, "Write overflows flash address space.");
     }
 
-    target_write_memory(dbg, address, len, dbg->scratch);
+    target_write_flash(dbg, op->address, op->len, dbg->scratch);
+}
+
+static void flash_write(struct debugger* dbg, const struct cmd_parse_result* args) {
+    struct debugger_write_op op;
+    if (subcommand_write(dbg, args, &op, dbg->scratch))
+        return;
+
+    flash_write_op(dbg, &op);
 }
 
 static void flash_info(struct debugger* dbg, const struct cmd_parse_result* args) {
@@ -54,6 +59,36 @@ static void flash_erase_chip(struct debugger* dbg, const struct cmd_parse_result
     uint8_t pkt[BDBP_MAX_MSG_LENGTH];
     bdbp_pkt_init(pkt, BDBP_CMD_ERASE_CHIP);
     target_exec_cmd(dbg, pkt);
+}
+
+static void flash_load(struct debugger* dbg, const struct cmd_parse_result* args) {
+    struct debugger_write_op* ops;
+    if (subcommand_load(dbg, args, &ops, dbg->scratch))
+        return;
+
+    flash_write_op(dbg, &ops[0]);
+    free(ops);
+}
+
+static void flash_program(struct debugger* dbg, struct cmd_parse_result* args) {
+    struct debugger_write_op* ops;
+    if (subcommand_load(dbg, args, &ops, dbg->scratch))
+        return;
+
+    // TODO: Verify file before erasing?
+    // TODO: Move this to target.c
+    for (size_t address = GLYCON_FLASH_START; address < GLYCON_FLASH_END; address += GLYCON_FLASH_SECTOR_SIZE) {
+        uint8_t pkt[BDBP_MAX_MSG_LENGTH];
+        bdbp_pkt_init(pkt, BDBP_CMD_ERASE_SECTOR);
+        bdbp_pkt_append_u16(pkt, address);
+        if (target_exec_cmd(dbg, pkt)) {
+            goto free_ops;
+        }
+    }
+
+    flash_write_op(dbg, &ops[0]);
+free_ops:
+    free(ops);
 }
 
 static const struct cmd* erase_commands[] = {
@@ -89,6 +124,16 @@ static const struct cmd* flash_commands[] = {
         .payload = flash_info
     }}},
     &(struct cmd){CMD_TYPE_DIRECTORY, "erase", "Erase (parts of) the target flash chip.", {.directory = {erase_commands}}},
+    &(struct cmd){CMD_TYPE_LEAF, "load", "Load a file and write it to target flash. Does not erase sectors.", {.leaf = {
+        .options = subcommand_load_opts,
+        .positionals = subcommand_load_pos,
+        .payload = flash_load
+    }}},
+    &(struct cmd){CMD_TYPE_LEAF, "program", "Erase flash address space and load file.", {.leaf = {
+        .options = subcommand_load_opts,
+        .positionals = subcommand_load_pos,
+        .payload = flash_program
+    }}},
     NULL
 };
 
