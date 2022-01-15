@@ -15,7 +15,6 @@ enum bus_mode {
     BUS_MODE_READ_MEM,
 };
 
-void bus_init(void);
 void bus_acquire(void);
 void bus_release(void);
 

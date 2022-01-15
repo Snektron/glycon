@@ -93,7 +93,6 @@ void cmd_erase_chip() {
 int main(void) {
     PINOUT_LED_DDR |= PINOUT_LED_MASK;
 
-    bus_init();
     serial_init();
     sei();
 
