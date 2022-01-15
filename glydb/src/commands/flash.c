@@ -110,12 +110,8 @@ static const struct cmd* erase_commands[] = {
 
 static const struct cmd* flash_commands[] = {
     &(struct cmd){CMD_TYPE_LEAF, "write", "Write to target flash.", {.leaf = {
-        .options = NULL,
-        .positionals = (struct cmd_positional[]){
-            {VALUE_TYPE_INT, "address", "The address to write to."},
-            {VALUE_TYPE_INT, "value", "The value to write."},
-            {}
-        },
+        .options = subcommand_write_opts,
+        .positionals = subcommand_write_pos,
         .payload = flash_write
     }}},
     &(struct cmd){CMD_TYPE_LEAF, "info", "Print information about the flash chip, such as manufacterer and device ID.", {.leaf = {

@@ -87,26 +87,27 @@ void debugger_print_error(struct debugger* dbg, const char* fmt, ...) {
 }
 
 static bool load_bin(struct debugger* dbg, const struct debugger_load_file_options* opts, struct debugger_write_op** ops, FILE* f, uint8_t* buffer) {
-    if (!fseek(f, 0, SEEK_END)) {
+    if (fseek(f, 0, SEEK_END) || ferror(f)) {
         debugger_print_error(dbg, "Failed to seek.");
-        return false;
+        goto err_close_file;
     }
 
     long size = ftell(f);
     if (size < 0) {
         debugger_print_error(dbg, "Failed to tell: %s.", strerror(errno));
-        return false;
+        goto err_close_file;
     }
 
     if (size > GLYCON_ADDRSPACE_SIZE) {
         debugger_print_error(dbg, "Binary file '%s' overflows address space.", opts->path);
-        return false;
+        goto err_close_file;
     }
 
     rewind(f);
     fread(buffer, 1, size, f);
     if (ferror(f)) {
         debugger_print_error(dbg, "Failed to read '%s'", opts->path);
+        goto err_close_file;
     }
 
     // Second op indicates end.
@@ -115,6 +116,10 @@ static bool load_bin(struct debugger* dbg, const struct debugger_load_file_optio
 
     (*ops)[0].address = opts->relocation;
     (*ops)[0].len = size;
+    return false;
+
+err_close_file:
+    fclose(f);
     return true;
 }
 
@@ -122,8 +127,8 @@ static bool load_ihex(struct debugger* dbg, const struct debugger_load_file_opti
     (void) opts;
     (void) buffer;
     fclose(f);
-    debugger_print_error(dbg, "TODO: Ihex loading.");
-    return false;
+    debugger_print_error(dbg, "TODO: ihex loading.");
+    return true;
 }
 
 bool debugger_load_file(struct debugger* dbg, const struct debugger_load_file_options* opts, struct debugger_write_op** ops, uint8_t* buffer) {
@@ -136,7 +141,7 @@ bool debugger_load_file(struct debugger* dbg, const struct debugger_load_file_op
     FILE* f = fopen(opts->path, "rb");
     if (!f) {
         debugger_print_error(dbg, "Failed to open file '%s': %s.", opts->path, strerror(errno));
-        return false;
+        return true;
     }
 
     ++ext;
@@ -147,6 +152,6 @@ bool debugger_load_file(struct debugger* dbg, const struct debugger_load_file_op
     } else {
         debugger_print_error(dbg, "Unknown file type '%s'.", ext);
         fclose(f);
-        return false;
+        return true;
     }
 }

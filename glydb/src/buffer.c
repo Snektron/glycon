@@ -26,6 +26,7 @@ void buffer_ensure_total_capacity(struct buffer* buf, size_t new_capacity) {
     void* new_data = realloc(buf->data, better_capacity);
     assert(new_data);
     buf->data = new_data;
+    buf->capacity = new_capacity;
 }
 
 void buffer_ensure_unused_capacity(struct buffer* buf, size_t unused_capacity) {

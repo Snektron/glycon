@@ -246,6 +246,7 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
             }
 
             buffer_push_data(&positionals, sizeof(union value_data), &value);
+            ++result->positionals_len;
             continue;
         }
 
@@ -261,8 +262,6 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
                 goto err_free_positionals;
       }
     }
-
-    result->positionals_len = positionals.size / sizeof(union value_data);
 
     if (result->positionals_len < min_positionals) {
         report_missing_positional(result->matched_command, result->positionals_len);

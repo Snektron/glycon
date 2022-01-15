@@ -70,13 +70,13 @@ static inline void bus_pulse_ram_write(void) {
     timing_delay();
 }
 
-// Momentarily pull the FLASH write enable pin low, which writes the data currently
+// Momentarily pull the FLASH write enable pin high, which writes the data currently
 // on the data bus to address if the address' msb is low.
 // Requires bus acquired.
 static inline void bus_pulse_flash_write(void) {
-    PINOUT_FLASH_WE_PORT &= ~PINOUT_FLASH_WE_MASK;
-    timing_delay();
     PINOUT_FLASH_WE_PORT |= PINOUT_FLASH_WE_MASK;
+    timing_delay();
+    PINOUT_FLASH_WE_PORT &= ~PINOUT_FLASH_WE_MASK;
     timing_delay();
 }
 

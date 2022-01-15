@@ -17,7 +17,7 @@ void bus_init(void) {
     bus_enable_mem_output(true);
     PINOUT_MEM_OE_DDR |= PINOUT_MEM_OE_MASK;
 
-    PINOUT_FLASH_WE_PORT |= PINOUT_FLASH_WE_MASK;
+    PINOUT_FLASH_WE_PORT &= ~PINOUT_FLASH_WE_MASK;
     PINOUT_FLASH_WE_DDR |= PINOUT_FLASH_WE_MASK;
 }
 

@@ -12,10 +12,7 @@
 
 static void flash_cmd(uint16_t addr, uint8_t data) {
     bus_write(addr, data);
-    PINOUT_FLASH_WE_PORT &= ~PINOUT_FLASH_WE_MASK;
-    timing_delay();
-    PINOUT_FLASH_WE_PORT |= PINOUT_FLASH_WE_MASK;
-    timing_delay();
+    bus_pulse_flash_write();
 }
 
 // Prepare the system for writing a flash command
