@@ -116,6 +116,7 @@ static bool load_bin(struct debugger* dbg, const struct debugger_load_file_optio
 
     (*ops)[0].address = opts->relocation;
     (*ops)[0].len = size;
+    fclose(f);
     return false;
 
 err_close_file:
