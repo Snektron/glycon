@@ -1,5 +1,6 @@
 #include "command.h"
 #include "parser.h"
+#include "buffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -210,7 +211,10 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
 
     // Note, correctly zero-intializes options.
     result->options = calloc(num_optionals, sizeof(struct cmd_parsed_optional));
-    result->positionals = calloc(min_positionals, sizeof(union value_data));
+    assert(result->options);
+
+    struct buffer positionals;
+    buffer_init(&positionals);
 
     while (true) {
         parser_skip_ws(p);
@@ -225,11 +229,11 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
                 size_t positional_len = parser_eat_word(p);
                 if (positional_len == 0) {
                     report_unexpected_character(p);
-                    return false;
+                    goto err_free_positionals;
                 }
 
                 report_superficial_positional(positional_len, positional);
-                return false;
+                goto err_free_positionals;
             }
 
             size_t positional = index >= max_positionals ? max_positionals - 1 : index;
@@ -238,14 +242,10 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
             enum value_parse_status status = value_parse(&value, p, type);
             if (status != VALUE_PARSE_SUCCESS) {
                 report_value_parse_error(p, status);
-                return false;
+                goto err_free_positionals;
             }
 
-            if (++result->positionals_len >= min_positionals) {
-                // TODO: More efficient realloc
-                result->positionals = realloc(result->positionals, result->positionals_len * sizeof(union value_data));
-            }
-            result->positionals[index] = value;
+            buffer_push_data(&positionals, sizeof(union value_data), &value);
             continue;
         }
 
@@ -254,20 +254,27 @@ static bool parse_leaf(struct cmd_parse_result* result, struct parser* p) {
             // Long argument
             ++p->offset;
             if (!parse_long_option(result, p, cmd->leaf.options))
-                return false;
+                goto err_free_positionals;
         } else {
             // Short argument
             if (!parse_short_options(result, p, cmd->leaf.options))
-                return false;
-        }
+                goto err_free_positionals;
+      }
     }
+
+    result->positionals_len = positionals.size / sizeof(union value_data);
 
     if (result->positionals_len < min_positionals) {
         report_missing_positional(result->matched_command, result->positionals_len);
-        return false;
+        goto err_free_positionals;
     }
 
+    result->positionals = positionals.data;
     return true;
+
+err_free_positionals:
+    buffer_deinit(&positionals);
+    return false;
 }
 
 static bool parse_cmd(struct cmd_parse_result* result, struct parser* p, const struct cmd* const* spec) {

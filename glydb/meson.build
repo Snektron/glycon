@@ -1,5 +1,6 @@
 sources = [
     'src/bdbp_util.c',
+    'src/buffer.c',
     'src/command.c',
     'src/connection.c',
     'src/debugger.c',
