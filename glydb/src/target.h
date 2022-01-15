@@ -16,8 +16,14 @@ bool target_exec_cmd(struct debugger* dbg, uint8_t* buf);
 // the write into multiple packets as needed.
 bool target_write_memory(struct debugger* dbg, uint16_t address, size_t len, const uint8_t buffer[len]);
 
+// Write a buffer of arbitrary length to the target flash. This will split up
+// the write into multiple packets as needed.
+// Note that this function does not handle erasing flash.
+bool target_write_flash(struct debugger* dbg, uint16_t address, size_t len, const uint8_t buffer[len]);
+
 // Read a buffer of arbitrary length from the target memory. This will split up
 // the read into multiple packets as needed.
+// This function can also be used to read out flash memory areas.
 bool target_read_memory(struct debugger* dbg, uint16_t address, size_t len, uint8_t buffer[len]);
 
 #endif

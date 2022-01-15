@@ -54,10 +54,10 @@ bool target_exec_cmd(struct debugger* dbg, uint8_t* buf) {
     return false;
 }
 
-bool target_write_memory(struct debugger* dbg, uint16_t address, size_t len, const uint8_t buffer[len]) {
+static bool target_write(struct debugger* dbg, enum bdbp_cmd cmd, uint16_t address, size_t len, const uint8_t buffer[len]) {
     uint8_t pkt[BDBP_MAX_MSG_LENGTH];
     for (size_t i = 0; i < len;) {
-        bdbp_pkt_init(pkt, BDBP_CMD_WRITE);
+        bdbp_pkt_init(pkt, cmd);
         bdbp_pkt_append_u16(pkt, address + i);
         uint8_t cap = bdbp_pkt_data_free(pkt);
         size_t bytes_left = len - i;
@@ -69,6 +69,14 @@ bool target_write_memory(struct debugger* dbg, uint16_t address, size_t len, con
     }
 
     return true;
+}
+
+bool target_write_memory(struct debugger* dbg, uint16_t address, size_t len, const uint8_t buffer[len]) {
+    return target_write(dbg, BDBP_CMD_WRITE, address, len, buffer);
+}
+
+bool target_write_flash(struct debugger* dbg, uint16_t address, size_t len, const uint8_t buffer[len]) {
+    return target_write(dbg, BDBP_CMD_WRITE_FLASH, address, len, buffer);
 }
 
 bool target_read_memory(struct debugger* dbg, uint16_t address, size_t len, uint8_t buffer[len]) {
