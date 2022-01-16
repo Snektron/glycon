@@ -15,6 +15,8 @@ sources = [
     'src/commands/memory.c',
     'src/commands/ping.c',
     'src/commands/quit.c',
+    'src/z80/disassemble.c',
+    'src/z80/z80.c',
 ]
 
 deps = [
