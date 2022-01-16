@@ -12,6 +12,7 @@ const struct cmd* commands[] = {
     &command_connection,
     &command_ping,
     &command_flash,
+    &command_disassemble,
     NULL
 };
 

@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define Z80_MAX_OPERANDS (3)
+#define Z80_MAX_INST_SIZE (4)
+
 enum z80_mnemoric {
     Z80_INVALID,
     Z80_ADC,
@@ -158,8 +161,6 @@ struct z80_op {
         enum z80_im im;
     };
 };
-
-#define Z80_MAX_OPERANDS (3)
 
 struct z80_inst {
     enum z80_mnemoric mnemoric;

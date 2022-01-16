@@ -438,71 +438,71 @@ static enum z80_mnemoric disassemble_regular(struct disas_ctx* ctx) {
                     op_reg16(ctx, Z80_R16_HL);
                     return Z80_LD;
                 }
-            case 2:
-                op_cc(ctx, ctx->opcode.y);
+            }
+        case 2:
+            op_cc(ctx, ctx->opcode.y);
+            op_nn(ctx);
+            return Z80_JP;
+        case 3:
+            switch (ctx->opcode.y) {
+            case 0:
                 op_nn(ctx);
                 return Z80_JP;
+            case 1:
+                // CB prefix
+                return Z80_INVALID;
+            case 2:
+                op_n_deref(ctx);
+                op_reg8(ctx, Z80_R8_A);
+                return Z80_OUT;
             case 3:
-                switch (ctx->opcode.y) {
+                op_reg8(ctx, Z80_R8_A);
+                op_n_deref(ctx);
+                return Z80_IN;
+            case 4:
+                op_deref(ctx, Z80_R16_SP);
+                op_hl_or_index(ctx);
+                return Z80_EX;
+            case 5:
+                op_reg16(ctx, Z80_R16_DE);
+                op_reg16(ctx, Z80_R16_HL); // Note: never ix/iy
+                return Z80_EX;
+            case 6:
+                return Z80_DI;
+            case 7:
+                return Z80_EI;
+            }
+        case 4:
+            op_cc(ctx, ctx->opcode.y);
+            op_nn(ctx);
+            return Z80_CALL;
+        case 5:
+            switch (ctx->opcode.q) {
+            case 0:
+                op_rp2(ctx, ctx->opcode.p);
+                return Z80_PUSH;
+            case 1:
+                switch (ctx->opcode.p) {
                 case 0:
                     op_nn(ctx);
-                    return Z80_JP;
+                    return Z80_CALL;
                 case 1:
-                    // CB prefix
-                    return Z80_INVALID;
+                    // DD prefix
                 case 2:
-                    op_n_deref(ctx);
-                    op_reg8(ctx, Z80_R8_A);
-                    return Z80_OUT;
+                    // ED prefix
                 case 3:
-                    op_reg8(ctx, Z80_R8_A);
-                    op_n_deref(ctx);
-                    return Z80_IN;
-                case 4:
-                    op_deref(ctx, Z80_R16_SP);
-                    op_hl_or_index(ctx);
-                    return Z80_EX;
-                case 5:
-                    op_reg16(ctx, Z80_R16_DE);
-                    op_reg16(ctx, Z80_R16_HL); // Note: never ix/iy
-                    return Z80_EX;
-                case 6:
-                    return Z80_DI;
-                case 7:
-                    return Z80_EI;
+                    // FD prefix
+                    return Z80_INVALID;
                 }
-            case 4:
-                op_cc(ctx, ctx->opcode.y);
-                op_nn(ctx);
-                return Z80_CALL;
-            case 5:
-                switch (ctx->opcode.q) {
-                case 0:
-                    op_rp2(ctx, ctx->opcode.p);
-                    return Z80_PUSH;
-                case 1:
-                    switch (ctx->opcode.p) {
-                    case 0:
-                        op_nn(ctx);
-                        return Z80_CALL;
-                    case 1:
-                        // DD prefix
-                    case 2:
-                        // ED prefix
-                    case 3:
-                        // FD prefix
-                        return Z80_INVALID;
-                    }
-                }
-            case 6: {
-                    enum z80_mnemoric result = op_alu(ctx, ctx->opcode.y);
-                    op_n(ctx);
-                    return result;
-                }
-            case 7:
-                op_imm8(ctx, ctx->opcode.y * 8);
-                return Z80_RST;
             }
+        case 6: {
+                enum z80_mnemoric result = op_alu(ctx, ctx->opcode.y);
+                op_n(ctx);
+                return result;
+            }
+        case 7:
+            op_imm8(ctx, ctx->opcode.y * 8);
+            return Z80_RST;
         }
     }
 

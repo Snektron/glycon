@@ -10,6 +10,7 @@ sources = [
     'src/value.c',
     'src/commands/commands.c',
     'src/commands/connection.c',
+    'src/commands/disassemble.c',
     'src/commands/flash.c',
     'src/commands/help.c',
     'src/commands/memory.c',
