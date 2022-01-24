@@ -15,3 +15,4 @@ endif
 subdir('common')
 subdir('glyco')
 subdir('glydb')
+subdir('kernel')

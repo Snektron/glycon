@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 static const char* z80_mnemoric_str_table[] = {
-    [Z80_INVALID] = "invalid",
+    [Z80_INVALID] = "(invalid)",
     [Z80_ADC] = "adc",
     [Z80_ADD] = "add",
     [Z80_AND] = "an",

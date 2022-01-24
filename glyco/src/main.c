@@ -93,6 +93,12 @@ void cmd_erase_chip() {
 int main(void) {
     PINOUT_LED_DDR |= PINOUT_LED_MASK;
 
+    PINOUT_BUSREQ_DDR |= PINOUT_BUSREQ_MASK;
+    PINOUT_BUSREQ_PORT &= ~PINOUT_BUSREQ_MASK;
+
+    PINOUT_BUSACK_DDR &= ~PINOUT_BUSACK_MASK;
+    PINOUT_BUSACK_PORT &= ~PINOUT_BUSACK_MASK;
+
     serial_init();
     sei();
 
