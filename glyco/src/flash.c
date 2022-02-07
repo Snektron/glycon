@@ -10,6 +10,8 @@
 #define FLASH_SOFTWARE_ID_MFG_ADDR (0x0000)
 #define FLASH_SOFTWARE_ID_DEV_ADDR (0x0001)
 
+// Write a particular command to flash (both the address and
+// data parts). Includes delay.
 static void flash_cmd(uint16_t addr, uint8_t data) {
     bus_write(addr, data);
     bus_pulse_flash_write();

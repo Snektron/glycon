@@ -15,9 +15,26 @@ enum bus_mode {
     BUS_MODE_READ_MEM,
 };
 
+// Acquire bus ownership from the Z80 cpu. This puts the Z80 on hold, and initializes
+// all arduino pins to their proper state. It is invalid to write to any of the
+// arduinos' pins or call `bus_*` functions before this is called.
 void bus_acquire(void);
+
+// Release the bus ownership, and let the Z80 continue processing. This disables all of
+// the relevant output pins of the arduino so that it does not interfere with the Z80.
+// After this, it is invalid to write to arduino pins or to call any bus_* function until
+// the bus is acquired again with `bus_acquire`.
 void bus_release(void);
 
+// Set the memory chip's output-enable status. When the memory chip's output is enabled,
+// it places the data at the location given by the address pins on the data bus, and so
+// this is required to read data from the memory chip.
+// Note, the memory chip is only enabled when the address bus contains an address
+// higher than or equal to 0x8000. It is valid to enable the memory chip's output
+// and read from a different device with address lower than 0x8000. In particular,
+// flash and memory can be read simultaneously while this setting is enabled.
+// Note, that the memory chip's output should be disabled when reading from any other
+// device to prevent the data signals from interfering.
 static inline void bus_enable_mem_output(bool enable) {
     if (enable) {
         PINOUT_MEM_OE_PORT &= ~PINOUT_MEM_OE_MASK;
@@ -26,7 +43,8 @@ static inline void bus_enable_mem_output(bool enable) {
     }
 }
 
-// Set address DDR, data DDR, and mem output DDR based on `mode`.
+// Set address DDR, data DDR, and mem output DDR based on `mode`, to quickly
+// configure the bus for a particular operation.
 // Requires bus acquired.
 // Note: Address bus is always in output mode when the bus is acquired.
 static inline void bus_set_mode(enum bus_mode mode) {

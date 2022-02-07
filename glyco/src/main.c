@@ -11,6 +11,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+// Handle CMD_WRITE: Write some data to memory.
 void cmd_write(uint8_t data_len) {
     uint16_t address = serial_poll_u16();
     data_len -= 2;
@@ -27,6 +28,7 @@ void cmd_write(uint8_t data_len) {
     serial_write_byte(0);
 }
 
+// Handle CMD_READ: Read some data from ram- or rom.
 void cmd_read() {
     uint16_t address = serial_poll_u16();
     uint8_t amt = serial_poll_u8();
@@ -43,6 +45,7 @@ void cmd_read() {
     bus_release();
 }
 
+// Handle CMD_FLASH: Write some data to flash storage.
 void cmd_flash(uint8_t data_len) {
     uint16_t address = serial_poll_u16();
     data_len -= 2;
@@ -58,6 +61,7 @@ void cmd_flash(uint8_t data_len) {
     serial_write_byte(0);
 }
 
+// Handle CMD_FLASH_ID: Returns the flash's manufacterer and device identifiers.
 void cmd_flash_id() {
     bus_acquire();
     uint8_t mfg, dev;
@@ -70,6 +74,7 @@ void cmd_flash_id() {
     serial_write_byte(dev);
 }
 
+// Handle CMD_ERASE_SECTOR: Erases a single flash sector.
 void cmd_erase_sector() {
     uint16_t address = serial_poll_u16();
 
@@ -81,6 +86,7 @@ void cmd_erase_sector() {
     serial_write_byte(0);
 }
 
+// Handle CMD_ERASE_CHIP: Erases the entire flash chip.
 void cmd_erase_chip() {
     bus_acquire();
     flash_erase_chip();

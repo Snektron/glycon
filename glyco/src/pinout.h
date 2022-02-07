@@ -45,8 +45,11 @@
 #define PINOUT_BUSACK_PIN PINB
 #define PINOUT_BUSACK_MASK (1 << PB2)
 
+// This enumeration is used to indicate that a pin should be set to a particular mode.
 enum pin_direction {
+    // Indicates that a pin or group of pins should be set to INPUT mode.
     PIN_INPUT = 0,
+    // Indicates that pin or group of pins should be set to OUTPUT mode.
     PIN_OUTPUT = 1
 };
 
