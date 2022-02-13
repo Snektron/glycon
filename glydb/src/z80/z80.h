@@ -5,9 +5,16 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// This file defines Z80 hardware related stuff.
+
+// The maximum number of operands that can appear within any instruction.
 #define Z80_MAX_OPERANDS (3)
+
+// The maximum number of bytes that makes up a single instruction.
 #define Z80_MAX_INST_SIZE (4)
 
+// Z80 instruction mnemorics.
+// See `doc/manuals/Z80.pdf`.
 enum z80_mnemoric {
     Z80_INVALID,
     Z80_ADC,
@@ -80,6 +87,7 @@ enum z80_mnemoric {
     Z80_XOR
 };
 
+// This enum describes 8-bit Z80 registers.
 enum z80_reg8 {
     Z80_R8_A,
     Z80_R8_B,
@@ -100,6 +108,7 @@ enum z80_reg8 {
     Z80_R8_IYH
 };
 
+// This enum describes 16-bit Z80 registers.
 enum z80_reg16 {
     Z80_R16_AF,
     Z80_R16_BC,
@@ -112,6 +121,7 @@ enum z80_reg16 {
     Z80_R16_SP
 };
 
+// This enum describes a Z80 status code.
 enum z80_status {
     Z80_STATUS_NZ,
     Z80_STATUS_Z,
@@ -123,13 +133,15 @@ enum z80_status {
     Z80_STATUS_M
 };
 
+// This enum describes a Z80 interrupt mode.
 enum z80_im {
     Z80_IM_0,
     Z80_IM_1,
     Z80_IM_2,
-    Z80_IM_01
+    Z80_IM_01 // 0/1 undefined
 };
 
+// This enum describes the form of a Z80 operand.
 enum z80_op_type {
     Z80_OP_NONE, // Used to mark absence
     Z80_OP_R8,
@@ -148,37 +160,57 @@ enum z80_op_type {
     Z80_OP_IM,
 };
 
+// This structure is used to describe a Z80 operand.
 struct z80_op {
+    // The operand form.
     enum z80_op_type type;
+    // Any extra data.
     union {
+        // Valid when type is Z80_OP_R8 or Z80_OP_R8_DEREF.
         enum z80_reg8 reg8;
+        // Valid when type is Z80_OP_R16 or Z80_OP_R16_DEREF.
         enum z80_reg16 reg16;
+        // Valid when type is Z80_OP_STATUS.
         enum z80_status status;
+        // Valid when type is Z80_OP_U8 or Z80_OP_U8_DEREF.
         uint8_t imm8;
+        // Valid when type is Z80_OP_U16 or Z80_OP_U16_DEREF.
         uint16_t imm16;
+        // Valid when type is Z80_OP_JMP_REL.
         int16_t jmp_disp; // -126 to +129.
+        //Valid when type is Z80_OP_IX_REL or Z80_OP_IY_REL.
         int8_t displacement;
+        // Valid when type is Z80_OP_IM.
         enum z80_im im;
     };
 };
 
+// This structure describes a Z80 instruction, including the mnemoric and operands.
 struct z80_inst {
+    // The instruction mnemoric.
     enum z80_mnemoric mnemoric;
+    // The operands. Absent operands are Z80_OP_NONE.
     struct z80_op operands[Z80_MAX_OPERANDS];
-    // Opcode size in bytes.
+    // Instruction size in bytes.
     uint8_t size;
 };
 
+// Convert an mnemoric to a string that describes it.
 const char* z80_mnemoric_to_str(enum z80_mnemoric mnemoric);
 
+// Convert an 8-bit register constant to a string that describes it.
 const char* z80_reg8_to_str(enum z80_reg8 reg8);
 
+// Convert a 16-bit register constant to a string that describes it.
 const char* z80_reg16_to_str(enum z80_reg16 reg16);
 
+// Convert a status code to a string that describes it.
 const char* z80_status_to_str(enum z80_status status);
 
+// Convert an interrupt mode to a string that describes it.
 const char* z80_im_to_str(enum z80_im im);
 
+// Print an instruction in human-readable form to a file stream.
 void z80_print_inst(const struct z80_inst* inst, FILE* stream);
 
 #endif

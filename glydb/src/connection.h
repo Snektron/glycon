@@ -5,8 +5,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// This structure represents a connection to a coprocessor.
 struct connection {
+    // Path of the port of this connection.
+    // `NULL` if no current connection.
     char* port;
+    // File descriptor of the connection.
+    // -1 if no current connection.
     int fd;
 };
 
@@ -28,11 +33,16 @@ void conn_close(struct connection* conn);
 // online.
 bool conn_is_open(struct connection* conn);
 
+// Write a single byte to the connection.
+// Returns -1 on error, in which case `errno` holds a describing error.
 int conn_write_byte(struct connection* conn, uint8_t byte);
 
-// Returns -1 on error.
+// Read a single byte from the connection.
+// Returns -1 on error, in which case `errno` holds a describing error.
 int conn_read_byte(struct connection* conn);
 
+// Write all bytes in `data` to the connection.
+// Returns -1 on error, in which case `errno` holds a describing error.
 int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]);
 
 #endif

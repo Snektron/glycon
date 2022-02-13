@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
+// Parse an integer value.
 static enum value_parse_status parse_int(int64_t* result_ptr, struct parser* p) {
     // TODO: Expressions.
     // TODO: Reset parser to start of int on error.
@@ -84,6 +85,7 @@ static enum value_parse_status parse_int(int64_t* result_ptr, struct parser* p) 
     return VALUE_PARSE_SUCCESS;
 }
 
+// Parse a string value.
 static enum value_parse_status parse_str(char** result_ptr, struct parser* p) {
     parser_skip_ws(p);
     if (parser_is_at_end(p)) {
@@ -116,6 +118,7 @@ static enum value_parse_status parse_str(char** result_ptr, struct parser* p) {
     return VALUE_PARSE_SUCCESS;
 }
 
+// Parse a boolean value.
 static enum value_parse_status parse_bool(bool* result_ptr, struct parser* p) {
     parser_skip_ws(p);
     if (parser_is_at_end(p)) {

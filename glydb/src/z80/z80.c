@@ -140,6 +140,7 @@ const char* z80_im_to_str(enum z80_im im) {
     return z80_im_str_table[im];
 }
 
+// Print a single operand in human-readable form to a file stream.
 static void print_operand(const struct z80_op* op, FILE* stream) {
     switch (op->type) {
         case Z80_OP_NONE:

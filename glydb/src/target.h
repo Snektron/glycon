@@ -5,6 +5,9 @@
 
 #include <stdint.h>
 
+// The functions in this header are used for medium-level target functionality that is useful
+// for implementing different commands.
+
 // Invoke a remove command, encoded as a BDBP packet. This function handles both
 // sending and receiving: When the function returns success (`false`), `buf` is
 // filled with the data returned from the currently connected device. If `true` is

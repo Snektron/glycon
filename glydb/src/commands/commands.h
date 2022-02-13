@@ -9,10 +9,13 @@
 struct debugger;
 struct debugger_write_op;
 
+// The type of a command's payload - a handler function.
 typedef void (*command_handler_t)(struct debugger* dbg, const struct cmd_parse_result* args);
 
+// All commands that the debugger recognizes.
 extern const struct cmd* commands[];
 
+// Form definitions of commands.
 extern const struct cmd command_help;
 extern const struct cmd command_quit;
 extern const struct cmd command_memory;
@@ -30,7 +33,9 @@ struct write_operation {
 
 // Shared functionality between memory/flash write commands.
 
+// Shared write-style command options.
 extern const struct cmd_option subcommand_write_opts[];
+// Shared write-style command positionals.
 extern const struct cmd_positional subcommand_write_pos[];
 
 // Handle the common write subcommand. This function fills `buffer` with data (which should be large enough
@@ -42,7 +47,9 @@ bool subcommand_write(struct debugger* dbg, const struct cmd_parse_result* args,
 
 // Shared functionality between memory/flash load commands.
 
+// Shared load-style command options.
 extern const struct cmd_option subcommand_load_opts[];
+// Shared load-style command positionals.
 extern const struct cmd_positional subcommand_load_pos[];
 
 // Handle the common load subcommand. This function loads a file from disk, and returns a number of buffers that need
