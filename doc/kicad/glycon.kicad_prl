@@ -1,11 +1,9 @@
 {
   "board": {
-    "active_layer": 0,
-    "active_layer_preset": "",
+    "active_layer": 31,
+    "active_layer_preset": "All Layers",
     "auto_track_width": true,
     "hidden_nets": [
-      "Earth",
-      "VDD",
       "/D1",
       "/D3",
       "/D5",
@@ -13,9 +11,7 @@
       "/D6",
       "/D4",
       "/D2",
-      "/D0",
-      "+5V",
-      "/VIN"
+      "/D0"
     ],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
@@ -70,6 +66,7 @@
       29,
       30,
       32,
+      33,
       34,
       35,
       36
