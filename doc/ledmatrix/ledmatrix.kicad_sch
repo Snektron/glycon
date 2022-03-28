@@ -8029,7 +8029,7 @@
     (property "Value" "470" (id 1) (at 143.51 176.5299 0)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "" (id 2) (at 142.748 175.26 90)
+    (property "Footprint" "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal" (id 2) (at 142.748 175.26 90)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 140.97 175.26 0)
@@ -9234,7 +9234,7 @@
       (reference "R13") (unit 1) (value "1K") (footprint "")
     )
     (path "/d3318490-1137-4881-bb77-fc7848f27e89"
-      (reference "R14") (unit 1) (value "470") (footprint "")
+      (reference "R14") (unit 1) (value "470") (footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal")
     )
     (path "/9d4ac918-5702-45cc-aa2f-9d61f2ac5d34"
       (reference "R15") (unit 1) (value "470") (footprint "")

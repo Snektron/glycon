@@ -1,0 +1,14 @@
+10 rode leds
+2x24 female header
+2x20 female header
+not gate (74hc04)
+74hc/ls21
+s4hc244 x2a
+6.144mhz crystal
+dip 40 sockets
+dip 32 sockets
+dip 20 sockets
+40 200 ohm weerstand
+
+
+
