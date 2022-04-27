@@ -3,9 +3,9 @@
 void bus_acquire(void) {
     // Acquire bus from the Z80: pull the busreq pin low,
     // and loop until the busack pin is low.
-    PINOUT_BUSREQ_PORT |= PINOUT_BUSREQ_MASK;
-    while ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) != 0)
-        continue;
+    // PINOUT_BUSREQ_PORT |= PINOUT_BUSREQ_MASK;
+    // while ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) != 0)
+    //     continue;
 
     pinout_write_data(0);
     pinout_set_data_ddr(PIN_INPUT);
@@ -40,7 +40,7 @@ void bus_release(void) {
     PINOUT_FLASH_WE_PORT &= PINOUT_FLASH_WE_MASK;
 
     // Release Z80 bus.
-    PINOUT_BUSREQ_PORT &= ~PINOUT_BUSREQ_MASK;
-    while ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) == 0)
-        continue;
+    // PINOUT_BUSREQ_PORT &= ~PINOUT_BUSREQ_MASK;
+    // while ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) == 0)
+    //     continue;
 }

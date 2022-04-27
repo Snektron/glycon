@@ -23,6 +23,7 @@ void cmd_write(uint8_t data_len) {
         bus_write(address + i, data);
         bus_pulse_ram_write();
     }
+    bus_release();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
     serial_write_byte(0);
@@ -104,6 +105,15 @@ int main(void) {
 
     PINOUT_BUSACK_DDR &= ~PINOUT_BUSACK_MASK;
     PINOUT_BUSACK_PORT &= ~PINOUT_BUSACK_MASK;
+
+    PINOUT_RESET_DDR &= ~PINOUT_RESET_DDR;
+    PINOUT_RESET_PORT &= ~PINOUT_RESET_MASK;
+
+    PINOUT_M1_DDR &= ~PINOUT_M1_DDR;
+    PINOUT_M1_PORT &= ~PINOUT_M1_MASK;
+
+    PINOUT_IOREQ_DDR &= ~PINOUT_IOREQ_DDR;
+    PINOUT_IOREQ_PORT &= ~PINOUT_IOREQ_MASK;
 
     serial_init();
     sei();
