@@ -29,7 +29,7 @@ void buffer_push_data(struct buffer* buf, size_t len, const void* data);
 
 // Return a pointer to the end of the current buffer.
 static inline void* buffer_end(struct buffer* buf) {
-    return &buf->data[buf->size];
+    return buf->data + buf->size;
 }
 
 #endif

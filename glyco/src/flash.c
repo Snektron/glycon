@@ -12,7 +12,7 @@
 
 // Write a particular command to flash (both the address and
 // data parts). Includes delay.
-static void flash_cmd(uint16_t addr, uint8_t data) {
+static void flash_cmd(gly_addr_t addr, uint8_t data) {
     bus_write(addr, data);
     bus_pulse_flash_write();
 }
@@ -22,7 +22,7 @@ static void flash_begin_cmd(void) {
     bus_set_mode(BUS_MODE_WRITE_MEM);
 }
 
-void flash_byte_program(uint16_t address, uint8_t data) {
+void flash_byte_program(gly_addr_t address, uint8_t data) {
     if (!glycon_is_flash_addr(address)) // Don't attempt to write to RAM.
         return;
     flash_begin_cmd();
@@ -55,7 +55,7 @@ void flash_get_software_id(uint8_t* mfg, uint8_t* dev) {
     flash_exit_software_id_mode();
 }
 
-void flash_erase_sector(uint16_t sector_address) {
+void flash_erase_sector(gly_addr_t sector_address) {
     if (!glycon_is_flash_addr(sector_address)) // Don't attempt to erase RAM.
         return;
     flash_begin_cmd();

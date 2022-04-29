@@ -28,7 +28,7 @@ static void disassemble(struct debugger* dbg, const struct cmd_parse_result* arg
     size_t offset = 0;
     while (offset < amt) {
         struct z80_inst inst;
-        printf("%04X:  ", (uint16_t)(address + offset));
+        printf("%05X:  ", (gly_addr_t)(address + offset));
         z80_disassemble(&inst, amt - offset, dbg->scratch + offset);
 
         for (size_t i = 0; i < inst.size; ++i)

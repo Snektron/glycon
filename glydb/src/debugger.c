@@ -4,7 +4,6 @@
 #include "bdbp_util.h"
 #include "commands/commands.h"
 
-#include "common/glycon.h"
 #include "common/binary_debug_protocol.h"
 
 #include <stdio.h>

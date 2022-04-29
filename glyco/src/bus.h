@@ -1,6 +1,8 @@
 #ifndef _GLYCO_BUS_H
 #define _GLYCO_BUS_H
 
+#include "common/glycon.h"
+
 #include "pinout.h"
 #include "timing.h"
 
@@ -63,7 +65,7 @@ static inline void bus_set_mode(enum bus_mode mode) {
 
 // Write a value to the bus at a particular address. Includes delay.
 // Requires BUS_MODE_WRITE_MEM.
-static inline void bus_write(uint16_t addr, uint8_t data) {
+static inline void bus_write(gly_addr_t addr, uint8_t data) {
     pinout_write_addr(addr);
     pinout_write_data(data);
     timing_delay();
@@ -71,7 +73,7 @@ static inline void bus_write(uint16_t addr, uint8_t data) {
 
 // Read a value from the bus at a particular address.
 // Requires BUS_MODE_READ_MEM.
-static inline uint8_t bus_read(uint16_t addr) {
+static inline uint8_t bus_read(gly_addr_t addr) {
     pinout_write_addr(addr);
     timing_delay();
     return pinout_read_data();

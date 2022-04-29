@@ -1,6 +1,8 @@
 #ifndef _GLYCO_SERIAL_H
 #define _GLYCO_SERIAL_H
 
+#include "common/glycon.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -26,8 +28,8 @@ int serial_read_u8();
 // Block until the next byte is available.
 uint8_t serial_poll_u8();
 
-// Block until the next wordt is available. Returns little-endian.
-uint16_t serial_poll_u16();
+// Block until the next gly_addr_t is available.
+gly_addr_t serial_poll_addr();
 
 // Write one byte to serial. Blocks until the byte is written.
 void serial_write_byte(uint8_t value);

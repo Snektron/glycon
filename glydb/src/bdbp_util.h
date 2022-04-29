@@ -1,10 +1,11 @@
 #ifndef _GLYDB_BDBP_UTIL_H
 #define _GLYDB_BDBP_UTIL_H
 
+#include "common/glycon.h"
+#include "common/binary_debug_protocol.h"
+
 #include <stdint.h>
 #include <stddef.h>
-
-#include "common/binary_debug_protocol.h"
 
 // This file implements some utility functions for handling BDBP-packets.
 
@@ -24,7 +25,7 @@ void bdbp_pkt_append_data(uint8_t* pkt, size_t len, const void* data);
 
 // Write a single 8-bit integer into the data part of a packet.
 void bdbp_pkt_append_u8(uint8_t* pkt, uint8_t data);
-// Write a single 16-bit integer into the data part of a packet.
-void bdbp_pkt_append_u16(uint8_t* pkt, uint16_t data);
+// Write a single address into the data part of a packet.
+void bdbp_pkt_append_addr(uint8_t* pkt, gly_addr_t data);
 
 #endif

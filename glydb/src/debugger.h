@@ -1,6 +1,8 @@
 #ifndef _GLYDB_DEBUGGER_H
 #define _GLYDB_DEBUGGER_H
 
+#include "common/glycon.h"
+
 #include "connection.h"
 
 #include <stddef.h>
@@ -39,7 +41,7 @@ void debugger_print_error(struct debugger* dbg, const char* fmt, ...) __attribut
 // A structure describing the target location of some amount of bytes that needs
 // to be written. Bytes themselves are stored externally.
 struct debugger_write_op {
-    uint16_t address;
+    gly_addr_t address;
     size_t len;
 };
 
@@ -51,7 +53,7 @@ struct debugger_load_file_options {
     // May be either `"ihx"` or `"bin"`.
     const char* ext_override;
     // Relocation address to add to the binary's intended location.
-    uint16_t relocation;
+    gly_addr_t relocation;
 };
 
 // Load a binary file of data that is intended to be written somewhere.

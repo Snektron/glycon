@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "common/glycon.h"
 #include "util.h"
 
 // See doc/z80comp_pinout.svg and doc/Arduino-Mega-Pinout.jpg
@@ -23,6 +24,12 @@
 #define PINOUT_ADDR_B_DDR DDRC
 #define PINOUT_ADDR_B_PORT PORTC
 #define PINOUT_ADDR_B_PIN PINC
+
+// Pins A14, A15, A16, A17
+#define PINOUT_ADDR_C_DDR DDRD
+#define PINOUT_ADDR_C_PORT PORTD
+#define PINOUT_ADDR_C_PIN PIND
+#define PINOUT_ADDR_C_MASK 0x0F
 
 #define PINOUT_FLASH_WE_DDR DDRD
 #define PINOUT_FLASH_WE_PORT PORTD
@@ -81,6 +88,7 @@ static inline void pinout_set_data_ddr(enum pin_direction direction) {
 static inline void pinout_set_addr_ddr(enum pin_direction direction) {
     PINOUT_ADDR_A_DDR = -(int) direction;
     PINOUT_ADDR_B_DDR = -(int) direction;
+    PINOUT_ADDR_C_DDR = (-(int) direction) & PINOUT_ADDR_C_MASK;
 }
 
 // Write a value to the data bus.
@@ -97,7 +105,7 @@ static inline uint8_t pinout_read_data(void) {
 
 // Write a value to the address bus.
 // Requires that the address bus DDR is set to output.
-static inline void pinout_write_addr(uint16_t addr) {
+static inline void pinout_write_addr(gly_addr_t addr) {
     uint8_t a = 0;
     a |= ((addr >>  0) & 0x7) << 0; // A0-2
     a |= ((addr >> 10) & 0x1) << 3; // A10
@@ -106,7 +114,7 @@ static inline void pinout_write_addr(uint16_t addr) {
     a |= ((addr >>  5) & 0x1) << 7; // A5
 
     uint8_t b = 0;
-    b |= ((addr >> 14) & 0x3) << 6; // PG0-1
+    // b |= ((addr >> 14) & 0x3) << 6; // PG0-1
     b |= ((addr >> 12) & 0x1) << 5; // A12
     b |= ((addr >> 13) & 0x1) << 4; // A13
     b |= ((addr >>  7) & 0x1) << 3; // A7
@@ -114,30 +122,37 @@ static inline void pinout_write_addr(uint16_t addr) {
     b |= ((addr >>  6) & 0x1) << 1; // A6
     b |= ((addr >>  9) & 0x1) << 0; // A9
 
+    uint8_t c = 0;
+    c |= (addr >> 14) & 0xF; // A14-17
+
     PINOUT_ADDR_A_PORT = a;
     PINOUT_ADDR_B_PORT = b;
+    PINOUT_ADDR_C_PORT = c;
 }
 
 // Read a value from the address bus.
 // Requires that the address bus DDR is set to input.
-static inline uint16_t pinout_read_addr(void) {
+static inline gly_addr_t pinout_read_addr(void) {
     uint8_t a = PINOUT_ADDR_A_PIN;
     uint8_t b = PINOUT_ADDR_B_PIN;
+    uint8_t c = PINOUT_ADDR_C_PIN;
 
-    uint16_t addr = 0;
+    gly_addr_t addr = 0;
     addr |= ((a >> 0) & 0x7) <<  0; // A0-2
     addr |= ((a >> 3) & 0x1) << 10; // A10
     addr |= ((a >> 4) & 0x3) <<  3; // A3-4
     addr |= ((a >> 6) & 0x1) << 11; // A11
     addr |= ((a >> 7) & 0x1) <<  5; // A5
 
-    addr |= ((b >> 6) & 0x3) << 14; // PG0-1
+    // addr |= ((b >> 6) & 0x3) << 14; // PG0-1
     addr |= ((b >> 5) & 0x1) << 12; // A12
     addr |= ((b >> 4) & 0x1) << 13; // A13
     addr |= ((b >> 3) & 0x1) <<  7; // A7
     addr |= ((b >> 2) & 0x1) <<  8; // A8
     addr |= ((b >> 1) & 0x1) <<  6; // A6
     addr |= ((b >> 0) & 0x1) <<  9; // A9
+
+    addr |= (c & 0x0F) << 14;
 
     return addr;
 }

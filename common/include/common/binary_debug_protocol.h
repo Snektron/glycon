@@ -16,21 +16,21 @@ enum bdbp_cmd {
     // Successful response has no data.
     BDBP_CMD_PING = 0x01,
 
-    // Write to target memory. Data field consists of 2 + variable bytes: the address, and the data
+    // Write to target memory. Data field consists of 3 + variable bytes: the address, and the data
     // to write.
-    // | 0x02 | 0x02 + var | ADDR (2 bytes) | DATA (DLEN - 2 bytes) |
+    // | 0x02 | 0x03 + var | ADDR (3 bytes) | DATA (DLEN - 3 bytes) |
     // Successful response has no data.
     BDBP_CMD_WRITE = 0x02,
 
-    // Read from target memory. Data field consists of 3 bytes: the address to start reading from,
+    // Read from target memory. Data field consists of 4 bytes: the address to start reading from,
     // and the number of bytes to read.
-    // | 0x03 | 0x03 | ADDR (2 byte) | AMT (1 byte) |
+    // | 0x03 | 0x04 | ADDR (3 byte) | AMT (1 byte) |
     // Successful response carries the bytes from the requested memory location.
     // | 0x01 | var | DATA (var bytes) |
     BDBP_CMD_READ = 0x03,
 
-    // Write to target flash. Data consists of 2 + variable bytes: the address, and the data to write.
-    // | 0x04 | 0x02 + var | ADDR (2 byte) | DATA (DLEN - 2 bytes) |
+    // Write to target flash. Data consists of 3 + variable bytes: the address, and the data to write.
+    // | 0x04 | 0x03 + var | ADDR (3 byte) | DATA (DLEN - 3 bytes) |
     // Successful response has no data.
     BDBP_CMD_WRITE_FLASH = 0x04,
 
@@ -42,7 +42,7 @@ enum bdbp_cmd {
 
     // Erase a single sector of the flash chip. Data field consists of an address; the sector of which
     // to erase. Sectors are 4 kilobytes and aligned to 4 kilobytes.
-    // | 0x06 | 0x02 | ADDR (2 bytes) |
+    // | 0x06 | 0x03 | ADDR (3 bytes) |
     // Successful response has no data.
     BDBP_CMD_ERASE_SECTOR = 0x06,
 
@@ -74,5 +74,8 @@ enum bdbp_status {
 #define BDBP_MIN_MSG_LENGTH (2)
 // 2 bytes for the header and data length, MAX_DATA_LENGTH bytes for the data itself.
 #define BDBP_MAX_MSG_LENGTH (BDBP_MIN_MSG_LENGTH + BDBP_MAX_DATA_LENGTH)
+
+// The size of an address when encoded in a packed.
+#define BDBP_ADDR_SIZE (3)
 
 #endif

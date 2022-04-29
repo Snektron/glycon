@@ -93,7 +93,7 @@ static struct z80_op* next_operand(struct disas_ctx* ctx) {
     assert(false);
 }
 
-static uint16_t read_u8(struct disas_ctx* ctx) {
+static uint8_t read_u8(struct disas_ctx* ctx) {
     if (ctx->out_of_bounds || ctx->inst->size == ctx->code_len) {
         ctx->out_of_bounds = true;
         return 0;

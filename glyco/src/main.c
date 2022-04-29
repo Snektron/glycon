@@ -3,6 +3,7 @@
 #include "flash.h"
 #include "bus.h"
 
+#include "common/glycon.h"
 #include "common/binary_debug_protocol.h"
 
 #include <stdint.h>
@@ -13,8 +14,8 @@
 
 // Handle CMD_WRITE: Write some data to memory.
 void cmd_write(uint8_t data_len) {
-    uint16_t address = serial_poll_u16();
-    data_len -= 2;
+    gly_addr_t address = serial_poll_addr();
+    data_len -= BDBP_ADDR_SIZE;
 
     bus_acquire();
     bus_set_mode(BUS_MODE_WRITE_MEM);
@@ -31,7 +32,7 @@ void cmd_write(uint8_t data_len) {
 
 // Handle CMD_READ: Read some data from ram- or rom.
 void cmd_read() {
-    uint16_t address = serial_poll_u16();
+    gly_addr_t address = serial_poll_addr();
     uint8_t amt = serial_poll_u8();
 
     serial_write_byte(BDBP_STATUS_SUCCESS);
@@ -48,8 +49,8 @@ void cmd_read() {
 
 // Handle CMD_FLASH: Write some data to flash storage.
 void cmd_flash(uint8_t data_len) {
-    uint16_t address = serial_poll_u16();
-    data_len -= 2;
+    gly_addr_t address = serial_poll_addr();
+    data_len -= BDBP_ADDR_SIZE;
 
     bus_acquire();
     for (uint8_t i = 0; i < data_len; ++i) {
@@ -77,7 +78,7 @@ void cmd_flash_id() {
 
 // Handle CMD_ERASE_SECTOR: Erases a single flash sector.
 void cmd_erase_sector() {
-    uint16_t address = serial_poll_u16();
+    gly_addr_t address = serial_poll_addr();
 
     bus_acquire();
     flash_erase_sector(address);

@@ -45,7 +45,7 @@ static void memory_read(struct debugger* dbg, const struct cmd_parse_result* arg
 
     uint8_t bytes_per_line = 16;
     for (size_t i = 0; i < amt; i += bytes_per_line) {
-        printf("%04X:", (uint16_t)(address + i));
+        printf("%05X:", (gly_addr_t)(address + i));
         for (uint8_t j = 0; j < bytes_per_line && j + i < amt; ++j) {
             printf(" %02X", dbg->scratch[j + i]);
         }

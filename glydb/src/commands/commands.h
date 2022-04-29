@@ -1,6 +1,8 @@
 #ifndef _GLYDB_COMMANDS_COMMANDS_H
 #define _GLYDB_COMMANDS_COMMANDS_H
 
+#include "common/glycon.h"
+
 #include "command.h"
 
 #include <stdint.h>
@@ -27,7 +29,7 @@ extern const struct cmd command_disassemble;
 // A structure describing the target location of some amount of bytes that needs
 // to be written. Bytes themselves are stored externally.
 struct write_operation {
-    uint16_t address;
+    gly_addr_t address;
     size_t len;
 };
 

@@ -85,10 +85,11 @@ uint8_t serial_poll_u8() {
     return ring_buffer_read(&rx_buffer);
 }
 
-uint16_t serial_poll_u16() {
-    uint8_t hi = serial_poll_u8();
-    uint8_t lo = serial_poll_u8();
-    return (hi << 8) | lo;
+gly_addr_t serial_poll_addr() {
+    gly_addr_t a = serial_poll_u8();
+    gly_addr_t b = serial_poll_u8();
+    gly_addr_t c = serial_poll_u8();
+    return (c << 16) | (b << 8) | a;
 }
 
 void serial_write_byte(uint8_t value) {

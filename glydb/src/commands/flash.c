@@ -51,7 +51,7 @@ static void flash_erase_sector(struct debugger* dbg, const struct cmd_parse_resu
 
     uint8_t pkt[BDBP_MAX_MSG_LENGTH];
     bdbp_pkt_init(pkt, BDBP_CMD_ERASE_SECTOR);
-    bdbp_pkt_append_u16(pkt, address);
+    bdbp_pkt_append_addr(pkt, address);
     target_exec_cmd(dbg, pkt);
 }
 
@@ -80,7 +80,7 @@ static void flash_program(struct debugger* dbg, struct cmd_parse_result* args) {
     for (size_t address = GLYCON_FLASH_START; address < GLYCON_FLASH_END; address += GLYCON_FLASH_SECTOR_SIZE) {
         uint8_t pkt[BDBP_MAX_MSG_LENGTH];
         bdbp_pkt_init(pkt, BDBP_CMD_ERASE_SECTOR);
-        bdbp_pkt_append_u16(pkt, address);
+        bdbp_pkt_append_addr(pkt, address);
         if (target_exec_cmd(dbg, pkt)) {
             goto free_ops;
         }

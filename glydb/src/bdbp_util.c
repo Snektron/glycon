@@ -38,7 +38,8 @@ void bdbp_pkt_append_u8(uint8_t* pkt, uint8_t data) {
     bdbp_pkt_append_data(pkt, sizeof(uint8_t), &data);
 }
 
-void bdbp_pkt_append_u16(uint8_t* pkt, uint16_t data) {
-    bdbp_pkt_append_u8(pkt, data >> 8);
+void bdbp_pkt_append_addr(uint8_t* pkt, gly_addr_t data) {
     bdbp_pkt_append_u8(pkt, data & 0xFF);
+    bdbp_pkt_append_u8(pkt, (data >> 8) & 0xFF);
+    bdbp_pkt_append_u8(pkt, (data >> 16) & 0xF);
 }
