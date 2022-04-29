@@ -8,6 +8,11 @@
 
 #include <stdint.h>
 
+// Timeout to wait until considering the bus acquire a failure.
+// This value is just a rough limit, the pin status will be polled
+// every ms until this amount of polls have been done.
+#define BUS_ACQUIRE_TIMEOUT_MS (100)
+
 // Utility enum used to quickly prepare the bus for a certain operation.
 enum bus_mode {
     // Prepare the bus for a memory device (ram or flash) write operation.
@@ -17,10 +22,18 @@ enum bus_mode {
     BUS_MODE_READ_MEM,
 };
 
+// Status enum returned from `bus_aquire` that signals the result of the operation.
+enum bus_acquire_status {
+    // Everything went OK, bus is now acquired.
+    BUS_ACQUIRE_SUCCESS,
+    // Bus acquire timed out.
+    BUS_ACQUIRE_TIMEOUT,
+};
+
 // Acquire bus ownership from the Z80 cpu. This puts the Z80 on hold, and initializes
 // all arduino pins to their proper state. It is invalid to write to any of the
 // arduinos' pins or call `bus_*` functions before this is called.
-void bus_acquire(void);
+enum bus_acquire_status bus_acquire(void);
 
 // Release the bus ownership, and let the Z80 continue processing. This disables all of
 // the relevant output pins of the arduino so that it does not interfere with the Z80.
@@ -32,8 +45,8 @@ void bus_release(void);
 // it places the data at the location given by the address pins on the data bus, and so
 // this is required to read data from the memory chip.
 // Note, the memory chip is only enabled when the address bus contains an address
-// higher than or equal to 0x8000. It is valid to enable the memory chip's output
-// and read from a different device with address lower than 0x8000. In particular,
+// higher than or equal to 0x20000. It is valid to enable the memory chip's output
+// and read from a different device with address lower than 0x20000. In particular,
 // flash and memory can be read simultaneously while this setting is enabled.
 // Note, that the memory chip's output should be disabled when reading from any other
 // device to prevent the data signals from interfering.

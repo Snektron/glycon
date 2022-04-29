@@ -85,13 +85,6 @@ uint8_t serial_poll_u8() {
     return ring_buffer_read(&rx_buffer);
 }
 
-gly_addr_t serial_poll_addr() {
-    gly_addr_t a = serial_poll_u8();
-    gly_addr_t b = serial_poll_u8();
-    gly_addr_t c = serial_poll_u8();
-    return (c << 16) | (b << 8) | a;
-}
-
 void serial_write_byte(uint8_t value) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = value;

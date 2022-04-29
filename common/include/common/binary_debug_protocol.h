@@ -59,7 +59,11 @@ enum bdbp_status {
 
     // Request header contained an invalid command.
     // Response data is empty.
-    BDBP_STATUS_UNKNOWN_CMD = 0x02
+    BDBP_STATUS_UNKNOWN_CMD = 0x02,
+
+    // The coprocessor failed to acquire the Z80's bus.
+    // Response data is empty.
+    BDBP_STATUS_BUS_ACQUIRE_TIMEOUT = 0x03,
 };
 
 // Definitions for offsets of packet fields.

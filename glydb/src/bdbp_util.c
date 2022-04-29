@@ -9,6 +9,8 @@ const char* bdbp_status_to_string(enum bdbp_status status) {
             return "Success";
         case BDBP_STATUS_UNKNOWN_CMD:
             return "Unknown command";
+        case BDBP_STATUS_BUS_ACQUIRE_TIMEOUT:
+            return "Bus acquisition timed out";
         default:
             return "(Invalid status)";
     }

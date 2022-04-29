@@ -18,6 +18,7 @@
 #define GLYCON_RAM_END (GLYCON_ADDRSPACE_SIZE)
 #define GLYCON_RAM_SIZE (GLYCON_RAM_END - GLYCON_RAM_START)
 
+// A type large enough to hold an 18-bit glycon address.
 typedef uint32_t gly_addr_t;
 
 static inline bool glycon_is_ram_addr(gly_addr_t address) {
