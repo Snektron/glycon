@@ -110,8 +110,8 @@ static void op_n(struct disas_ctx* ctx) {
 
 static void op_nn(struct disas_ctx* ctx) {
     struct z80_op* op = next_operand(ctx);
-    uint8_t hi = read_u8(ctx);
     uint8_t lo = read_u8(ctx);
+    uint8_t hi = read_u8(ctx);
     op->type = Z80_OP_U16;
     op->imm16 = (hi << 8) | lo;
 }
@@ -124,8 +124,8 @@ static void op_n_deref(struct disas_ctx* ctx) {
 
 static void op_nn_deref(struct disas_ctx* ctx) {
     struct z80_op* op = next_operand(ctx);
-    uint8_t hi = read_u8(ctx);
     uint8_t lo = read_u8(ctx);
+    uint8_t hi = read_u8(ctx);
     op->type = Z80_OP_U16_DEREF;
     op->imm16 = (hi << 8) | lo;
 }
