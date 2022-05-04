@@ -3,12 +3,13 @@ PORT_PIO_B_DATA    .equ 0x01
 PORT_PIO_A_CONTROL .equ 0x02
 PORT_PIO_B_CONTROL .equ 0x03
 
-PIO_CMD_SET_MODE .equ 0x0F
+PIO_CMD_SET_MODE .equ 0xF0
 
+; Constants are reversed for now because the page pio is reversed...
 PIO_MODE_OUTPUT .equ 0x00
-PIO_MODE_INPUT  .equ 0x40
-PIO_MODE_BIDIR  .equ 0x80
-PIO_MODE_CTRL   .equ 0xC0
+PIO_MODE_INPUT  .equ 0x02
+PIO_MODE_BIDIR  .equ 0x01
+PIO_MODE_CTRL   .equ 0x03
 
 rst00:
     jp boot
@@ -46,19 +47,29 @@ boot:
     di
     ; Set the page pio to manual mode
     ld a, PIO_CMD_SET_MODE | PIO_MODE_CTRL
-    out (PORT_PIO_B_CONTROL), a
+    out (PORT_PIO_A_CONTROL), a
     ; Define all pins of this port as output
     xor a, a
+    out (PORT_PIO_A_CONTROL), a
+
+    ld a, PIO_CMD_SET_MODE | PIO_MODE_CTRL
     out (PORT_PIO_B_CONTROL), a
-    ; Select page 0x8 (the first ram page) and assign it to slots 2 and 3 (addresses 0x8000, 0xC000).
-    ld a, 0x8
+    xor a, a
+    out (PORT_PIO_B_CONTROL), a
+    ; Select page 0x0 (the first rom page) and assign it to slot 0 and 1.
+    ld a, 0x0
+    out (PORT_PIO_A_DATA), a
+    ; Select page 0xA (the first ram page) and assign it to slots 2 and 3 (addresses 0x8000, 0xC000).
+    ; note, bit reversed value.
+    ld a, 0x55
     out (PORT_PIO_B_DATA), a
     ; Write a bunch of stuff.
     ld h, 0
     ld l, 0
 .loop:
     ld a, h
-    or 0x80
+    or 0x80 ; Set the first bit
+    and ~0x40 ; Reset the second bit
     ld h, a
     ld (hl), 123
     inc hl
