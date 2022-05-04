@@ -25,12 +25,6 @@ bool target_exec_cmd(struct debugger* dbg, uint8_t* buf) {
         debugger_print_error(dbg, "Failed to read: %s.", strerror(errno));
         return true;
     }
-
-    enum bdbp_status status = result;
-    if (status != BDBP_STATUS_SUCCESS) {
-        debugger_print_error(dbg, "Device returned status %s.", bdbp_status_to_string(status));
-        return true;
-    }
     buf[0] = result;
 
     result = conn_read_byte(&dbg->conn);
@@ -50,6 +44,12 @@ bool target_exec_cmd(struct debugger* dbg, uint8_t* buf) {
             return true;
         }
         buf[i + 2] = result;
+    }
+
+    enum bdbp_status status = buf[0];
+    if (status != BDBP_STATUS_SUCCESS) {
+        debugger_print_error(dbg, "Device returned status %s.", bdbp_status_to_string(status));
+        return true;
     }
 
     return false;
