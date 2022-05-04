@@ -64,6 +64,9 @@ enum bdbp_status {
     // The coprocessor failed to acquire the Z80's bus.
     // Response data is empty.
     BDBP_STATUS_BUS_ACQUIRE_TIMEOUT = 0x03,
+
+    // The bus ack pin was somehow already low.
+    BDBP_STATUS_BUS_ALREADY_ACQUIRED = 0x04,
 };
 
 // Definitions for offsets of packet fields.

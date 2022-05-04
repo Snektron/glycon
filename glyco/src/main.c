@@ -31,8 +31,12 @@ bool acquire_bus_or_fail() {
         case BUS_ACQUIRE_SUCCESS:
             return true;
         case BUS_ACQUIRE_TIMEOUT:
-            serial_write_byte(BDBP_STATUS_BUS_ACQUIRE_TIMEOUT);
-            serial_write_byte(0);
+            serial_write_u8(BDBP_STATUS_BUS_ACQUIRE_TIMEOUT);
+            serial_write_u8(0);
+            return false;
+        case BUS_ACQUIRE_ACQUIRED:
+            serial_write_u8(BDBP_STATUS_BUS_ALREADY_ACQUIRED);
+            serial_write_u8(0);
             return false;
         default:
             __builtin_unreachable();
@@ -52,8 +56,8 @@ void cmd_write(uint8_t* data, uint8_t* data_end) {
     }
     bus_release();
 
-    serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(0);
+    serial_write_u8(BDBP_STATUS_SUCCESS);
+    serial_write_u8(0);
 }
 
 // Handle CMD_READ: Read some data from ram- or rom.
@@ -63,12 +67,12 @@ void cmd_read(uint8_t* data, uint8_t* data_end) {
     gly_addr_t address = pkt_read_addr(&data);
     uint8_t amt = *data++;
 
-    serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(amt);
+    serial_write_u8(BDBP_STATUS_SUCCESS);
+    serial_write_u8(amt);
 
     bus_set_mode(BUS_MODE_READ_MEM);
     for (uint8_t i = 0; i < amt; ++i) {
-        serial_write_byte(bus_read(address + i));
+        serial_write_u8(bus_read(address + i));
     }
     bus_release();
 }
@@ -84,22 +88,23 @@ void cmd_flash(uint8_t* data, uint8_t* data_end) {
     }
     bus_release();
 
-    serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(0);
+    serial_write_u8(BDBP_STATUS_SUCCESS);
+    serial_write_u8(0);
 }
 
 // Handle CMD_FLASH_ID: Returns the flash's manufacterer and device identifiers.
 void cmd_flash_id() {
     if (!acquire_bus_or_fail())
         return;
+
     uint8_t mfg, dev;
     flash_get_software_id(&mfg, &dev);
     bus_release();
 
-    serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(2);
-    serial_write_byte(mfg);
-    serial_write_byte(dev);
+    serial_write_u8(BDBP_STATUS_SUCCESS);
+    serial_write_u8(2);
+    serial_write_u8(mfg);
+    serial_write_u8(dev);
 }
 
 // Handle CMD_ERASE_SECTOR: Erases a single flash sector.
@@ -111,8 +116,8 @@ void cmd_erase_sector(uint8_t* data, uint8_t* data_end) {
     flash_erase_sector(address);
     bus_release();
 
-    serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(0);
+    serial_write_u8(BDBP_STATUS_SUCCESS);
+    serial_write_u8(0);
 }
 
 // Handle CMD_ERASE_CHIP: Erases the entire flash chip.
@@ -122,8 +127,8 @@ void cmd_erase_chip() {
     flash_erase_chip();
     bus_release();
 
-    serial_write_byte(BDBP_STATUS_SUCCESS);
-    serial_write_byte(0);
+    serial_write_u8(BDBP_STATUS_SUCCESS);
+    serial_write_u8(0);
 }
 
 int main(void) {
@@ -135,10 +140,10 @@ int main(void) {
     PINOUT_BUSACK_DDR &= ~PINOUT_BUSACK_MASK;
     PINOUT_BUSACK_PORT &= ~PINOUT_BUSACK_MASK;
 
-    PINOUT_RESET_DDR &= ~PINOUT_RESET_DDR;
+    PINOUT_RESET_DDR &= ~PINOUT_RESET_MASK;
     PINOUT_RESET_PORT &= ~PINOUT_RESET_MASK;
 
-    PINOUT_M1_DDR &= ~PINOUT_M1_DDR;
+    PINOUT_M1_DDR &= ~PINOUT_M1_MASK;
     PINOUT_M1_PORT &= ~PINOUT_M1_MASK;
 
     PINOUT_IOREQ_DDR &= ~PINOUT_IOREQ_DDR;
@@ -162,8 +167,8 @@ int main(void) {
 
         switch (cmd) {
             case BDBP_CMD_PING:
-                serial_write_byte(BDBP_STATUS_SUCCESS);
-                serial_write_byte(0);
+                serial_write_u8(BDBP_STATUS_SUCCESS);
+                serial_write_u8(0);
                 break;
             case BDBP_CMD_WRITE:
                 cmd_write(msg_data, msg_data + data_len);
@@ -184,12 +189,8 @@ int main(void) {
                 cmd_erase_chip();
                 break;
             default:
-                // Delete any data bytes that follow
-                for (size_t i = 0; i < data_len; ++i) {
-                    serial_poll_u8();
-                }
-                serial_write_byte(BDBP_STATUS_UNKNOWN_CMD);
-                serial_write_byte(0);
+                serial_write_u8(BDBP_STATUS_UNKNOWN_CMD);
+                serial_write_u8(0);
                 break;
         }
     }

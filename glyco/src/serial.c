@@ -85,7 +85,7 @@ uint8_t serial_poll_u8() {
     return ring_buffer_read(&rx_buffer);
 }
 
-void serial_write_byte(uint8_t value) {
+void serial_write_u8(uint8_t value) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = value;
 }

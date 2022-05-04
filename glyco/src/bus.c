@@ -2,7 +2,15 @@
 
 #include <util/delay.h>
 
+// Timeout to wait until considering the bus acquire a failure.
+// This value is just a rough limit, the pin status will be polled
+// every ms until this amount of polls have been done.
+#define BUS_ACQUIRE_TIMEOUT_MS (10)
+
 enum bus_acquire_status bus_acquire(void) {
+    if ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) == 0) {
+        return BUS_ACQUIRE_ACQUIRED;
+    }
     // Acquire bus from the Z80: pull the busreq pin low,
     // and loop until the busack pin is low.
     PINOUT_BUSREQ_PORT |= PINOUT_BUSREQ_MASK;
@@ -12,6 +20,7 @@ enum bus_acquire_status bus_acquire(void) {
         ++delay;
     }
     if ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) != 0) {
+        PINOUT_BUSREQ_PORT &= ~PINOUT_BUSREQ_MASK;
         return BUS_ACQUIRE_TIMEOUT;
     }
 
@@ -50,6 +59,7 @@ void bus_release(void) {
     PINOUT_FLASH_WE_PORT &= PINOUT_FLASH_WE_MASK;
 
     // Release Z80 bus.
+    // TODO: Should there be a timeout on this?
     PINOUT_BUSREQ_PORT &= ~PINOUT_BUSREQ_MASK;
     while ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) == 0)
         continue;

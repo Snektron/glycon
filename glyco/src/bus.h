@@ -8,11 +8,6 @@
 
 #include <stdint.h>
 
-// Timeout to wait until considering the bus acquire a failure.
-// This value is just a rough limit, the pin status will be polled
-// every ms until this amount of polls have been done.
-#define BUS_ACQUIRE_TIMEOUT_MS (100)
-
 // Utility enum used to quickly prepare the bus for a certain operation.
 enum bus_mode {
     // Prepare the bus for a memory device (ram or flash) write operation.
@@ -28,6 +23,8 @@ enum bus_acquire_status {
     BUS_ACQUIRE_SUCCESS,
     // Bus acquire timed out.
     BUS_ACQUIRE_TIMEOUT,
+    // Bus was already acquired.
+    BUS_ACQUIRE_ACQUIRED,
 };
 
 // Acquire bus ownership from the Z80 cpu. This puts the Z80 on hold, and initializes

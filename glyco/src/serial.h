@@ -27,6 +27,6 @@ int serial_read_u8();
 uint8_t serial_poll_u8();
 
 // Write one byte to serial. Blocks until the byte is written.
-void serial_write_byte(uint8_t value);
+void serial_write_u8(uint8_t value);
 
 #endif
