@@ -20,4 +20,4 @@ add_project_arguments(
 subdir('common')
 subdir('glyco')
 subdir('glydb')
-subdir('kernel')
+subdir('glyos')
