@@ -56,12 +56,12 @@ boot:
     out (PORT_PIO_B_CONTROL), a
     xor a, a
     out (PORT_PIO_B_CONTROL), a
-    ; Select page 0x0 (the first rom page) and assign it to slot 0 and 1.
+    ; Select the first rom page) and assign it to slot 0 and 1.
     ld a, 0x0
     out (PORT_PIO_A_DATA), a
-    ; Select page 0xA (the first ram page) and assign it to slots 2 and 3 (addresses 0x8000, 0xC000).
+    ; Select the first ram page) and assign it to slots 2 and 3 (addresses 0x8000, 0xC000).
     ; note, bit reversed value.
-    ld a, 0x55
+    ld a, 0x10 ; port B upper bits = slot 3
     out (PORT_PIO_B_DATA), a
     ; Write a bunch of stuff.
     ld h, 0
