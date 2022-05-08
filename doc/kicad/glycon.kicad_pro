@@ -601,7 +601,7 @@
   },
   "pcbnew": {
     "last_paths": {
-      "gencad": "",
+      "gencad": "glycon.cad",
       "idf": "",
       "netlist": "./",
       "specctra_dsn": "glycon.dsn",
