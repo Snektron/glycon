@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 170688946289681
 Resistor_THT
 R_Array_SIP4
@@ -727,3 +728,6 @@ Resistor Radial_Power series Radial pin pitch 7.37mm 10W length 16.1mm width 9mm
 0
 2
 2
+=======
+0
+>>>>>>> c0cb69b (Revert PCB format to kicad-stable. Note that the schematic and pcb designs are now slightly older versions, so the design should be updated)
