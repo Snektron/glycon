@@ -1,3 +1,4 @@
 glycon-backups/
 ledmatrix-backups/
 *.gbr
+build/
