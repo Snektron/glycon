@@ -2,3 +2,5 @@ glycon-backups/
 ledmatrix-backups/
 *.gbr
 build/
+*.lck
+*.sublime*

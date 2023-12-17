@@ -57,20 +57,29 @@ boot:
     xor a, a
     out (PORT_PIO_B_CONTROL), a
     ; Select the first rom page) and assign it to slot 0 and 1.
-    ld a, 0x0
+    ld a, 0x98
     out (PORT_PIO_A_DATA), a
     ; Select the first ram page) and assign it to slots 2 and 3 (addresses 0x8000, 0xC000).
     ; note, bit reversed value.
     ld a, 0x10 ; port B upper bits = slot 3
     out (PORT_PIO_B_DATA), a
-    ; Write a bunch of stuff.
-    ld h, 0
-    ld l, 0
-.loop:
-    ld a, h
-    or 0x80 ; Set the first bit
-    and ~0x40 ; Reset the second bit
-    ld h, a
-    ld (hl), 123
-    inc hl
-    jp .loop
+    ; Load start adress of memory into HL
+    ld ix, 0x8000
+    ld bc, 0x2
+
+; fill ram with corresponding adress values (16 bit, inc by 2)
+.loop0:
+    ; set register a to 0
+    ld hl, 0x8000
+    ld ix, 0x8000
+.loop1:
+    ld (ix + 0), h
+    ld (ix + 1), l
+
+    add ix, bc
+    add hl, bc
+
+    jp c, .loop0
+    
+
+    jp .loop1

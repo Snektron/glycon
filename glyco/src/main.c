@@ -149,14 +149,18 @@ int main(void) {
     PINOUT_IOREQ_DDR &= ~PINOUT_IOREQ_DDR;
     PINOUT_IOREQ_PORT &= ~PINOUT_IOREQ_MASK;
 
+    //PINOUT_ADDR_A_PORT = 0x00;
+    //PINOUT_ADDR_A_DDR = 0x00;
+
     serial_init();
     sei();
 
     while (1) {
         // Use led to indicate processing.
-        PINOUT_LED_PORT |= PINOUT_LED_MASK;
-        serial_wait_for_data();
         PINOUT_LED_PORT &= ~PINOUT_LED_MASK;
+        serial_wait_for_data();
+        PINOUT_LED_PORT |= PINOUT_LED_MASK;
+
         uint8_t cmd = serial_read_u8();
         uint8_t data_len = serial_poll_u8();
 
