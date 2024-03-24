@@ -97,6 +97,8 @@ void cmd_flash_id() {
     if (!acquire_bus_or_fail())
         return;
 
+
+
     uint8_t mfg, dev;
     flash_get_software_id(&mfg, &dev);
     bus_release();
@@ -159,7 +161,7 @@ int main(void) {
         // Use led to indicate processing.
         PINOUT_LED_PORT &= ~PINOUT_LED_MASK;
         serial_wait_for_data();
-        PINOUT_LED_PORT |= PINOUT_LED_MASK;
+        //PINOUT_LED_PORT |= PINOUT_LED_MASK;
 
         uint8_t cmd = serial_read_u8();
         uint8_t data_len = serial_poll_u8();

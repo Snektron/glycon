@@ -58,8 +58,10 @@ void bus_release(void) {
     PINOUT_FLASH_WE_DDR &= ~PINOUT_FLASH_WE_MASK;
     PINOUT_FLASH_WE_PORT &= PINOUT_FLASH_WE_MASK;
 
+    pinout_set_addr_ddr(PIN_INPUT);
+
     // Release Z80 bus.
-    // TODO: Should there be a timeout on this?
+    // TODO: Should
     PINOUT_BUSREQ_PORT &= ~PINOUT_BUSREQ_MASK;
     while ((PINOUT_BUSACK_PIN & PINOUT_BUSACK_MASK) == 0)
         continue;

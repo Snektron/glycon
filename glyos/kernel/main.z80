@@ -45,41 +45,149 @@ rst38:
 boot:
     ; Disable interrupts
     di
-    ; Set the page pio to manual mode
+    ; Set the page pio to manual mode in both ports
     ld a, PIO_CMD_SET_MODE | PIO_MODE_CTRL
     out (PORT_PIO_A_CONTROL), a
-    ; Define all pins of this port as output
+    out (PORT_PIO_B_CONTROL), a
+    ; Define all pins of both ports as output for now.
     xor a, a
     out (PORT_PIO_A_CONTROL), a
+    out (PORT_PIO_B_CONTROL), a
 
     ld a, PIO_CMD_SET_MODE | PIO_MODE_CTRL
     out (PORT_PIO_B_CONTROL), a
     xor a, a
     out (PORT_PIO_B_CONTROL), a
-    ; Select the first rom page) and assign it to slot 0 and 1.
-    ld a, 0x98
-    out (PORT_PIO_A_DATA), a
-    ; Select the first ram page) and assign it to slots 2 and 3 (addresses 0x8000, 0xC000).
+
+    ; Manually put ram page 01 in slot 2 (0x8000 - 0xBFFF). We don't have a
+    ; stack pointer yet, so we cannot call setpage2 yet.
     ; note, bit reversed value.
-    ld a, 0x10 ; port B upper bits = slot 3
+    ld a, 0x10 ; pages 0000 1000
     out (PORT_PIO_B_DATA), a
+    ; Set stack pointer in slot 2. For now this is probably
+    ; enough...
+    ld sp, 0x8100
+
+    ; Set the remaining pages using the setpage functions.
+
+    ld a, 0x01 ; ROM page 1
+    call setpage1
+    ld a, 0x81 ; RAM page 1
+    call setpage3
+    ; Blinky mode
+    ld a, 0xF
+    call setportc
+
     ; Load start adress of memory into HL
     ld ix, 0x8000
     ld bc, 0x2
 
 ; fill ram with corresponding adress values (16 bit, inc by 2)
 .loop0:
-    ; set register a to 0
-    ld hl, 0x8000
-    ld ix, 0x8000
+    ld hl, 0x0000
+    ld ix, 0x9000
+    in a, (PORT_PIO_B_DATA)
+    xor a, 0x0F
+    out (PORT_PIO_B_DATA), a
 .loop1:
     ld (ix + 0), h
     ld (ix + 1), l
 
+    inc hl
     add ix, bc
-    add hl, bc
 
     jp c, .loop0
-    
 
     jp .loop1
+
+; Set page in slot 1 (address 0x4000-0x7FFF)
+; a: page (0-16)
+; destroys l
+setpage1:
+    ; Clear any upper bits if the user supplied them
+    and a, 0x0F
+    ; Reverse bits in a, since the PIO data is reversed
+    call bitreverse
+    ; Slot 1 is high bits of PORT_PIO_A_DATA, so this should be correct already
+    ld l, a
+    in a, (PORT_PIO_A_DATA)
+    and a, 0x0F
+    or a, l
+    out (PORT_PIO_A_DATA), a
+    ret
+
+; Set page in slot 2 (address 0x8000-0xBFFF)
+; a: page (0-16)
+; destroys l
+setpage2:
+    ; Reverse bits in a, since the PIO data is reversed
+    call bitreverse
+    ; Slot 2 is the low bits of port B
+    ; Shift also clears any upper bits of the original a
+    srl a
+    srl a
+    srl a
+    srl a
+    ld l, a
+    in a, (PORT_PIO_B_DATA)
+    and a, 0xF0
+    or a, l
+    out (PORT_PIO_B_DATA), a
+    ret
+
+; Set page in slot 3 (address 0xC000-0xFFFF)
+; a: page (0-16)
+; destroys l
+setpage3:
+    ; Reverse bits in a, since the PIO data is reversed
+    call bitreverse
+    ; Slot 2 is the low bits of port B
+    ; Shift also clears any upper bits of the original a
+    srl a
+    srl a
+    srl a
+    srl a
+    ld l, a
+    in a, (PORT_PIO_A_DATA)
+    and a, 0xF0
+    or a, l
+    out (PORT_PIO_A_DATA), a
+    ret
+
+; Set the GPIO state of GPIO port C.
+; a: gpio state (4 bits)
+setportc:
+    ; Reverse bits in a, since the PIO data is reversed
+    call bitreverse
+    ; GPIO C is the high bits of port B
+    ; Shift also clears any upper bits of the original a
+    srl a
+    srl a
+    srl a
+    srl a
+    ld l, a
+    in a, (PORT_PIO_B_DATA)
+    and a, 0xF0
+    or a, l
+    out (PORT_PIO_B_DATA), a
+    ret
+
+; Reverse bits in A
+; Destroys L
+; http://www.retroprogramming.com/2014/01/fast-z80-bit-reversal.html
+bitreverse:
+    ld l,a    ; a = 76543210
+    rlca
+    rlca      ; a = 54321076
+    xor l
+    and 0xAA
+    xor l     ; a = 56341270
+    ld l,a
+    rlca
+    rlca
+    rlca      ; a = 41270563
+    rrc l     ; l = 05634127
+    xor l
+    and 0x66
+    xor l     ; a = 01234567
+    ret

@@ -103,7 +103,7 @@ static bool load_bin(struct debugger* dbg, const struct debugger_load_file_optio
     }
 
     rewind(f);
-    if (fread(buffer, 1, size, f) || ferror(f)) {
+    if (fread(buffer, 1, size, f) < 0 || ferror(f)) {
         debugger_print_error(dbg, "Failed to read '%s'", opts->path);
         goto err_close_file;
     }
