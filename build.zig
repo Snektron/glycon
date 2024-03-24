@@ -112,4 +112,16 @@ pub fn build(b: *std.Build) void {
         glyos_assemble.addFileArg(.{ .path = "glyos/kernel/main.z80" });
         b.getInstallStep().dependOn(&b.addInstallFile(glyos, "share/glycon/kernel.bin").step);
     }
+
+    {
+        // Build simulator
+        const glysim = b.addExecutable(.{
+            .name = "glysim",
+            .root_source_file = .{ .path = "glysim/src/main.zig" },
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        });
+        b.installArtifact(glysim);
+    }
 }
