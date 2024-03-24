@@ -17,10 +17,14 @@
 
 static const char* prompt = "(glydb) ";
 
-void debugger_init(struct debugger* dbg) {
+void debugger_init(struct debugger* dbg, const char* initial_port) {
     dbg->quit = false;
     conn_init(&dbg->conn);
     dbg->scratch = malloc(GLYCON_ADDRSPACE_SIZE);
+
+    if (initial_port) {
+        (void) subcommand_open(dbg, initial_port);
+    }
 }
 
 void debugger_deinit(struct debugger* dbg) {

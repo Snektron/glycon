@@ -1,9 +1,12 @@
 #include "commands/commands.h"
 #include "debugger.h"
+#include "connection.h"
 
 #include "common/glycon.h"
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 const struct cmd* commands[] = {
     &command_help,
@@ -92,4 +95,16 @@ bool subcommand_load(struct debugger* dbg, const struct cmd_parse_result* args, 
     };
 
     return debugger_load_file(dbg, &opts, ops, buffer);
+}
+
+bool subcommand_open(struct debugger* dbg, const char* port) {
+    if (conn_is_open(&dbg->conn)) {
+        debugger_print_error(dbg, "A connection is already open. Close it first with `connection close`.");
+        return true;
+    } else if (!conn_open_serial(&dbg->conn, port)) {
+        debugger_print_error(dbg, "Failed to open serial port '%s': %s.", port, strerror(errno));
+        return true;
+    }
+
+    return false;
 }

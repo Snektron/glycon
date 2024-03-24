@@ -19,8 +19,9 @@ struct debugger {
     uint8_t* scratch;
 };
 
-// Initialize a debugger. This does not yet open a connection.
-void debugger_init(struct debugger* dbg);
+// Initialize a debugger. If `initial_port` is not `NULL`, attempt to open this
+// port directly.
+void debugger_init(struct debugger* dbg, const char* initial_port);
 
 // Deinitialize resources owned by the debugger, and close any connection.
 void debugger_deinit(struct debugger* dbg);

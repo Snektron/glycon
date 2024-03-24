@@ -64,4 +64,8 @@ extern const struct cmd_positional subcommand_load_pos[];
 // is already printed.
 bool subcommand_load(struct debugger* dbg, const struct cmd_parse_result* args, struct debugger_write_op** ops, uint8_t* buffer);
 
+// Handle the common `open` command. This attempts to open a connection to `port`, and prints
+// an error message on failure. Returns `true` if an error occurred, or `false` on success.
+bool subcommand_open(struct debugger* dbg, const char* port);
+
 #endif

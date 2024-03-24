@@ -8,11 +8,7 @@
 
 static void connection_open(struct debugger* dbg, const struct cmd_parse_result* args) {
     const char* path = args->positionals_len == 0 ? "/dev/ttyUSB0" : args->positionals[0].as_str;
-    if (conn_is_open(&dbg->conn)) {
-        debugger_print_error(dbg, "A connection is already open. Close it first with `connection close`.");
-    } else if (!conn_open_serial(&dbg->conn, path)) {
-        debugger_print_error(dbg, "Failed to open serial port '%s': %s.", path, strerror(errno));
-    }
+    (void) subcommand_open(dbg, path);
 }
 
 static void connection_close(struct debugger* dbg, const struct cmd_parse_result* args) {
