@@ -4,8 +4,7 @@ ledmatrix-backups/
 build/
 **.lck**
 *.sublime*
-.cache
-.ccls-cache
+.cache/
+.ccls-cache/
 *.sublime*
 *.idx*
-
