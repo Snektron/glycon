@@ -17,12 +17,12 @@ struct parser {
 };
 
 // Return whether there is anything left to parse.
-inline int parser_is_at_end(struct parser* p) {
+static inline int parser_is_at_end(struct parser* p) {
     return p->offset >= p->length;
 }
 
 // Return the next character without advancing the parser. Returns -1 if there is no such character.
-inline int parser_peek(struct parser* p) {
+static inline int parser_peek(struct parser* p) {
     if (parser_is_at_end(p))
         return -1;
     return p->input[p->offset];
@@ -30,7 +30,7 @@ inline int parser_peek(struct parser* p) {
 
 // Return the next character, and advance the parser to the next character.
 // Returns -1 if there is no such character.
-inline int parser_consume(struct parser* p) {
+static inline int parser_consume(struct parser* p) {
     if (parser_is_at_end(p))
         return -1;
     return p->input[p->offset++];
@@ -38,7 +38,7 @@ inline int parser_consume(struct parser* p) {
 
 // Compare the next character with `expected`. If they are the same, the parser advances to the next
 // character and returns true. Otherwise, this function returns false.
-inline bool parser_eat(struct parser* p, char expected) {
+static inline bool parser_eat(struct parser* p, char expected) {
     int c = parser_peek(p);
     if (c == expected) {
         ++p->offset;
@@ -48,13 +48,13 @@ inline bool parser_eat(struct parser* p, char expected) {
 }
 
 // Return a pointer to the remaining input, the part that is not yet parsed.
-inline const char* parser_remaining(struct parser* p) {
+static inline const char* parser_remaining(struct parser* p) {
     return &p->input[p->offset];
 }
 
 // Return the number of characters that haven't been parsed yet. This is the length
 // of the string returned by `parser_remaining()`.
-inline size_t parser_remaining_len(struct parser* p) {
+static inline size_t parser_remaining_len(struct parser* p) {
     return p->length - p->offset;
 }
 

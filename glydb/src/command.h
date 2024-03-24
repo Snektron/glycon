@@ -123,12 +123,12 @@ void cmd_parse_result_deinit(struct cmd_parse_result* result);
 const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]);
 
 // Return wether this option is valid. Default-constructed options return invalid.
-inline bool cmd_option_is_valid(const struct cmd_option* opt) {
+static inline bool cmd_option_is_valid(const struct cmd_option* opt) {
     return opt->name || opt->shorthand;
 }
 
 // Return whether this positional is valid. Default-constructed positionals return invalid.
-inline bool cmd_positional_is_valid(const struct cmd_positional* pos) {
+static inline bool cmd_positional_is_valid(const struct cmd_positional* pos) {
     return pos->value_name;
 }
 

@@ -8,3 +8,5 @@ build/
 .ccls-cache/
 *.sublime*
 *.idx*
+zig-cache
+zig-out
