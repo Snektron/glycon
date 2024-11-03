@@ -21,6 +21,7 @@
         pkgsCross.avr.buildPackages.gcc
         pkgsCross.avr.buildPackages.binutils
         pkgsCross.avr.avrlibc
+        zig
       ];
     };
   };

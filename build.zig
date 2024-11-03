@@ -24,16 +24,16 @@ pub fn build(b: *std.Build) void {
             "-DBAUD_TOL=3",
             "-Os",
         });
-        object.addFileArg(.{ .path = "glyco/src/bus.c" });
-        object.addFileArg(.{ .path = "glyco/src/flash.c" });
-        object.addFileArg(.{ .path = "glyco/src/main.c" });
-        object.addFileArg(.{ .path = "glyco/src/serial.c" });
-        object.addPrefixedDirectoryArg("-I", .{ .path = "glyco/src" });
-        object.addPrefixedDirectoryArg("-I", .{ .path = "common/include" });
+        object.addFileArg(b.path("glyco/src/bus.c"));
+        object.addFileArg(b.path("glyco/src/flash.c"));
+        object.addFileArg(b.path("glyco/src/main.c"));
+        object.addFileArg(b.path("glyco/src/serial.c"));
+        object.addPrefixedDirectoryArg("-I", b.path("glyco/src"));
+        object.addPrefixedDirectoryArg("-I", b.path("common/include"));
         const elf = object.addPrefixedOutputFileArg("-o", "glyco.elf");
 
         const bin = b.addObjCopy(elf, .{
-            .only_sections = &.{ ".text" },
+            .only_section = ".text",
             .format = .bin,
         });
 
@@ -73,7 +73,7 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         });
         glydb.addCSourceFiles(.{
-            .root = .{ .path = "glydb/src" },
+            .root = b.path("glydb/src"),
             .files = &.{
                 "bdbp_util.c",
                 "buffer.c",
@@ -100,8 +100,8 @@ pub fn build(b: *std.Build) void {
             },
         });
         glydb.linkSystemLibrary("editline");
-        glydb.addIncludePath(.{ .path = "common/include" });
-        glydb.addIncludePath(.{ .path = "glydb/src" });
+        glydb.addIncludePath(b.path("common/include"));
+        glydb.addIncludePath(b.path("glydb/src"));
         b.installArtifact(glydb);
     }
 
@@ -109,7 +109,7 @@ pub fn build(b: *std.Build) void {
         // Build OS
         const glyos_assemble = b.addSystemCommand(&.{ "scas", "-o" });
         const glyos = glyos_assemble.addOutputFileArg("kernel.bin");
-        glyos_assemble.addFileArg(.{ .path = "glyos/kernel/main.z80" });
+        glyos_assemble.addFileArg(b.path("glyos/kernel/main.z80"));
         b.getInstallStep().dependOn(&b.addInstallFile(glyos, "share/glycon/kernel.bin").step);
     }
 
@@ -117,7 +117,7 @@ pub fn build(b: *std.Build) void {
         // Build simulator
         const glysim = b.addExecutable(.{
             .name = "glysim",
-            .root_source_file = .{ .path = "glysim/src/main.zig" },
+            .root_source_file = b.path("glysim/src/main.zig"),
             .target = target,
             .optimize = optimize,
             .link_libc = true,

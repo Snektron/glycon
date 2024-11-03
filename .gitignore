@@ -10,3 +10,4 @@ build/
 *.idx*
 zig-cache
 zig-out
+.zig-cache
