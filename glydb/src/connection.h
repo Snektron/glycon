@@ -43,6 +43,6 @@ int conn_read_byte(struct connection* conn);
 
 // Write all bytes in `data` to the connection.
 // Returns -1 on error, in which case `errno` holds a describing error.
-int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]);
+int conn_write_all(struct connection* conn, size_t len, const uint8_t data[]);
 
 #endif

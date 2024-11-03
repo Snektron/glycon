@@ -620,7 +620,7 @@ static enum z80_mnemoric disassemble_bit(struct disas_ctx* ctx) {
     assert(false);
 }
 
-void z80_disassemble(struct z80_inst* inst, size_t len, const uint8_t code[len]) {
+void z80_disassemble(struct z80_inst* inst, size_t len, const uint8_t code[]) {
     struct disas_ctx ctx = {
         .inst = inst,
         .code_len = len,

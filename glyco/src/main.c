@@ -97,8 +97,6 @@ void cmd_flash_id() {
     if (!acquire_bus_or_fail())
         return;
 
-
-
     uint8_t mfg, dev;
     flash_get_software_id(&mfg, &dev);
     bus_release();

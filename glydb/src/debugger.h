@@ -27,7 +27,7 @@ void debugger_init(struct debugger* dbg, const char* initial_port);
 void debugger_deinit(struct debugger* dbg);
 
 // Evaluate a single line.
-void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]);
+void debugger_do_line(struct debugger* dbg, size_t len, const char line[]);
 
 // REPL loop that executes until the `quit` command is invoked.
 void debugger_repl(struct debugger* dbg);

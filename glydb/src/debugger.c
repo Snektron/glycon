@@ -32,7 +32,7 @@ void debugger_deinit(struct debugger* dbg) {
     free(dbg->scratch);
 }
 
-void debugger_do_line(struct debugger* dbg, size_t len, const char line[len]) {
+void debugger_do_line(struct debugger* dbg, size_t len, const char line[]) {
     struct parser p;
     parser_init(&p, len, line);
 

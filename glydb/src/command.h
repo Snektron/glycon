@@ -120,7 +120,7 @@ void cmd_parse_result_deinit(struct cmd_parse_result* result);
 
 // Return the command from `spec` that best matched a name given by `command`. Returns `NULL` if there was
 // not a good match.
-const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]);
+const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[]);
 
 // Return wether this option is valid. Default-constructed options return invalid.
 static inline bool cmd_option_is_valid(const struct cmd_option* opt) {

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-void parser_init(struct parser* p, size_t len, const char input[len]) {
+void parser_init(struct parser* p, size_t len, const char input[]) {
     p->input = input;
     p->length = len;
     p->offset = 0;

@@ -59,7 +59,7 @@ static inline size_t parser_remaining_len(struct parser* p) {
 }
 
 // Initialize a parser with a particular input string.
-void parser_init(struct parser* p, size_t len, const char input[len]);
+void parser_init(struct parser* p, size_t len, const char input[]);
 
 // Return whether the parser is currently at whitespace.
 // Whitespace consists of space, tab, cariage return, and feed.

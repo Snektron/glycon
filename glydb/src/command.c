@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-static void report_invalid_command(size_t len, const char text[len]) {
+static void report_invalid_command(size_t len, const char text[]) {
     printf("error: Invalid command '%.*s'.\n", (int) len, text);
 }
 
@@ -32,7 +32,7 @@ static void report_missing_argument(const struct cmd_option* opt, bool shorthand
     }
 }
 
-static void report_invalid_long_option(size_t len, const char opt[len]) {
+static void report_invalid_long_option(size_t len, const char opt[]) {
     printf("error: Invalid option --%.*s.\n", (int) len, opt);
 }
 
@@ -55,7 +55,7 @@ static void report_missing_positional(const struct cmd* cmd, size_t i) {
     printf("error: Missing required positional argument <%s>.\n", cmd->leaf.positionals[i].value_name);
 }
 
-static void report_superficial_positional(size_t len, const char pos[len]) {
+static void report_superficial_positional(size_t len, const char pos[]) {
     printf("error: Superficial positional argument '%.*s'.\n", (int) len, pos);
 }
 
@@ -346,7 +346,7 @@ void cmd_parse_result_deinit(struct cmd_parse_result* result) {
     free(result->positionals);
 }
 
-const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[len]) {
+const struct cmd* cmd_match_command(const struct cmd* const* spec, size_t len, const char command[]) {
     if (!spec)
         return NULL;
 

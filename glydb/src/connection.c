@@ -107,7 +107,7 @@ int conn_read_byte(struct connection* conn) {
     }
 }
 
-int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]) {
+int conn_write_all(struct connection* conn, size_t len, const uint8_t data[]) {
     for (size_t i = 0; i < len; ++i) {
         if (conn_write_byte(conn, data[i]) < 0) {
             return -1;
@@ -117,7 +117,7 @@ int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len])
     return 0;
 }
 
-// int conn_write_all(struct connection* conn, size_t len, const uint8_t data[len]) {
+// int conn_write_all(struct connection* conn, size_t len, const uint8_t data[]) {
 //     size_t offset = 0;
 //     while (offset < len) {
 //         ssize_t written = write(conn->fd, &data[offset], len - offset);
